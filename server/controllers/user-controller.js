@@ -1,4 +1,5 @@
-const { User } = require('../model')
+const { User, Company } = require('../model')
+const { findOne } = require('../model/Company')
 
 const { signToken } = require('../utils/auth')
 
@@ -19,18 +20,64 @@ const userController = {
     },
 
     async createNewUser ({ body }, res) {
-        const newUser = new User({
+        const username = body.email.split('@')[0]
+
+        const company = await Company.findOne({ signup_key: body.signup_key })
+            .select('_id display_name')
+            .lean()
+
+        const newUser = await User.create({
             email: body.email,
-            username: body.username,
+            username: username,
             password: body.password,
             first_name: body.first_name,
             last_name: body.last_name,
-            permission: body.permission,
-            company: body.company
+            permission: 'employee',
+            company: company._id
         })
-    
-        const savedUser = await newUser.save()
-        res.json(savedUser)
+
+        const user = {
+            email: newUser.email,
+            username: newUser.username,
+            first_name: newUser.first_name,
+            last_name: newUser.last_name,
+            permission: newUser.permission,
+            company: company
+        }
+
+        const token = signToken(user)
+
+        res.json({user, token})
+    },
+
+    async loginUser ({ body }, res) {
+        const loginUser = await User.findOne({email: body.email})
+            .populate({
+                path: 'company',
+                select: '_id display_name'
+            })
+        if (!loginUser) {
+            res.status(400).json({ message: 'Incorrect credentials'})
+        }
+
+        const correctPw = await loginUser.comparePassword(body.password)
+
+        if (!correctPw) {
+            res.status(400).json({ message: 'Incorrect credentials'})
+        }
+
+        const user = {
+            username: loginUser.username,
+            email: loginUser.email,
+            first_name: loginUser.first_name,
+            last_name: loginUser.last_name,
+            permission: loginUser.permission,
+            company: loginUser.company
+        }
+
+        const token = signToken(user)
+        
+        res.json({user, token})
     },
 
     async deleteUser ({ params }, res) {

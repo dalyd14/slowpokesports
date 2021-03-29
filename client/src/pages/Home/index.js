@@ -1,8 +1,9 @@
 import React from 'react'
 
-const Home = () => {
+const Home = ({companyName}) => {
+
     return (
-        <h1>Welcome to Effikas</h1>
+        <h1>Welcome to {companyName || "Default"}</h1>
     )
 }
 

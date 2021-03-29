@@ -4,6 +4,7 @@ const {
     getOneUser,
     getAllUsersAtCompany,
     createNewUser,
+    loginUser,
     deleteUser
 } = require('../../controllers/user-controller')
 
@@ -13,6 +14,10 @@ router
     .route('/')
     .get(getAllUsers)
     .post(createNewUser)
+
+router
+    .route('/login')
+    .post(loginUser)
 
 router
     .route('/:username')

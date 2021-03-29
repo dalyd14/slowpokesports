@@ -2,14 +2,19 @@ import React from 'react'
 import { Link } from 'react-router-dom';
 import { Navbar, Nav } from 'react-bootstrap';
 
+import Auth from '../../utils/auth'
+
 const AppNavbar = ({ companyName, loggedIn }) => {
 
+    const handleLogout = () => {
+        Auth.logout()
+    }
     return (
         <Navbar bg="light" variant="light">
             <Navbar.Brand as={Link} to="/">
-                {companyName ? companyName : "Effikas"}
+                {companyName ? companyName : "Default"}
             </Navbar.Brand>
-            {!loggedIn ? '' : 
+            {loggedIn && 
                 <Nav className="mr-auto">
                     <Nav.Link as={Link} to="/dashboard">
                         Dashboard
@@ -24,10 +29,16 @@ const AppNavbar = ({ companyName, loggedIn }) => {
             }
             <Nav className="ml-auto" inline="true">
                 {!loggedIn ? 
-                    <Nav.Link as={Link} to="/login">
-                        Login
-                    </Nav.Link> :
-                    <Nav.Link as={Link} to="/logout">
+                    <>
+                        <Nav.Link as={Link} to="/login">
+                            Login
+                        </Nav.Link>
+                        <Nav.Link as={Link} to="/register">
+                            Register
+                        </Nav.Link>
+                    </>
+                    :
+                    <Nav.Link onClick={handleLogout}>
                         Logout
                     </Nav.Link>
                 }
