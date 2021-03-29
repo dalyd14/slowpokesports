@@ -1,4 +1,4 @@
-const { Reader, Company, Antenna } = require('../../model')
+const { Reader, Company, Antenna } = require('../model')
 
 const readerController = {
     async getAllReaders (req, res) {

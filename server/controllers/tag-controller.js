@@ -1,4 +1,4 @@
-const { Tag, TagHistory } = require('../../model')
+const { Tag, TagHistory } = require('../model')
 
 const tagController = {
     async getTag({ params }, res) {
