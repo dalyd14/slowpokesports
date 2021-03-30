@@ -6,6 +6,7 @@ import Auth from './utils/auth'
 
 import Navbar from './components/Navbar'
 import Home from './pages/Home';
+import Dashboard from './pages/Dashboard'
 import Authentication from './pages/Authentication';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
       <div className="page-content">
         <Switch>
           <Route exact path="/" render={() => <Home companyName={user?.company.display_name} />} />
+          <Route exact path="/dashboard" component={Dashboard} />
           <Route exact path="/register" render={() => <Authentication login={false} setUser={setUser} setLoggedin={setLoggedin} />} />
           <Route exact path="/login" render={() => <Authentication login={true} setUser={setUser} setLoggedin={setLoggedin} />} />
         </Switch>
