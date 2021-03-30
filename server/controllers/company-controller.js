@@ -18,6 +18,18 @@ const companyController = {
         res.json(savedCompany)
     },
 
+    async getOneCompany ({ user }, res) {
+        const company = await Company.findById(user.company._id)
+            .populate({
+                path: "readers",
+                populate: {
+                    path: "antennas"
+                }
+            })
+            .lean()
+        res.json(company)
+    },
+
     async showCompanyDashboard (req, res) {
         const company = await Company.findById(req.user.company._id)
             .populate({

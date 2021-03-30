@@ -2,6 +2,7 @@ const router = require('express').Router();
 const {
     getAllCompanies,
     createNewCompany,
+    getOneCompany,
     showCompanyDashboard,
     getCompanyFilterData,
     updateCompany,
@@ -16,10 +17,9 @@ router
     .post(createNewCompany)
 
 router
-    .route('/:id')
-    .put(updateCompany)
-    .delete(deleteCompany)
-
+    .route('/getOne')
+    .get(authMiddleware, getOneCompany)
+    
 router
     .route('/dashboard')
     .get(authMiddleware, showCompanyDashboard)
@@ -27,5 +27,10 @@ router
 router
     .route('/filters')
     .get(authMiddleware, getCompanyFilterData)
+
+router
+    .route('/:id')
+    .put(updateCompany)
+    .delete(deleteCompany)
 
 module.exports = router
