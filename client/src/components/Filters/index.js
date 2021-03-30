@@ -5,8 +5,13 @@ import './filters.css'
 
 import Auth from '../../utils/auth'
 
-const Filters = () => {
+const Filters = ({ query }) => {
     const [companyFilterData, setCompanyFilterData] = useState()
+    const [queryFilters, setQueryFilters] = useState({
+        reader: [],
+        antenna: [],
+        status: []
+    })
 
     useEffect(() => {
         const token = Auth.getToken()
@@ -28,6 +33,32 @@ const Filters = () => {
 
     }, [])
 
+    const handleChange = (event, filterType, sys_id, reader_sys_id) => {
+        const checked = event.target.checked
+
+        if (filterType === 'reader') {
+            if (checked) {
+                queryFilters.reader.push(sys_id)
+            } else {
+                queryFilters.reader = queryFilters.reader.filter(readerEq => readerEq !== sys_id)
+            }
+            
+        } else if (filterType === 'antenna') {
+            if (checked) {
+                queryFilters.antenna.push({ sys_id, reader: reader_sys_id })
+            } else {
+                queryFilters.antenna = queryFilters.antenna.filter(antennaEq => antennaEq.sys_id !== sys_id)
+            }
+        } else if (filterType === 'status') {
+            if (checked) {
+                queryFilters.status.push(sys_id)
+            } else {
+                queryFilters.status = queryFilters.status.filter(stat => stat !== sys_id)
+            }
+        }
+        console.log(queryFilters)
+    }
+
     if (!companyFilterData) {
         return <h2>Loading...</h2>
     }
@@ -43,7 +74,7 @@ const Filters = () => {
                                 {
                                     companyFilterData.readers.map(reader => (
                                         <div className="form-check" key={reader.sys_id}>
-                                            <input className="form-check-input" type="checkbox" id={"reader-" + reader.sys_id} />
+                                            <input onChange={(event) => handleChange(event, 'reader', reader.sys_id)} className="form-check-input" type="checkbox" id={"reader-" + reader.sys_id} />
                                             <label className="form-check-label" htmlFor={"reader-" + reader.sys_id}>{reader.display_name}</label>
                                         </div>                                        
                                     ))
@@ -56,7 +87,7 @@ const Filters = () => {
                                 {
                                     companyFilterData.antennas.map(antenna => (
                                         <div className="form-check" key={antenna.sys_id}>
-                                            <input className="form-check-input" type="checkbox" data-reader={antenna.reader.sys_id} id={"antenna-" + antenna.sys_id} />
+                                            <input onChange={(event) => handleChange(event, 'antenna', antenna.sys_id, antenna.reader.sys_id)} className="form-check-input" type="checkbox" data-reader={antenna.reader.sys_id} id={"antenna-" + antenna.sys_id} />
                                             <label className="form-check-label" htmlFor={"antenna-" + antenna.sys_id}>{antenna.display_name}</label>
                                         </div>
                                     ))
@@ -67,11 +98,11 @@ const Filters = () => {
                             <h4>Status</h4>
                             <div id="status-checklist" className="form-group">
                                 <div className="form-check">
-                                    <input className="form-check-input" type="checkbox" id="status-PRES" />
+                                    <input onChange={(event) => handleChange(event, 'status', 'PRES')} className="form-check-input" type="checkbox" id="status-PRES" />
                                     <label className="form-check-label" htmlFor="status-PRES">Present</label>
                                 </div>
                                 <div className="form-check">
-                                    <input className="form-check-input" type="checkbox" id="status-MISS" />
+                                    <input onChange={(event) => handleChange(event, 'status', 'MISS')} className="form-check-input" type="checkbox" id="status-MISS" />
                                     <label className="form-check-label" htmlFor="status-MISS">Missing</label>
                                 </div>
                             </div>

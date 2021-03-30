@@ -4,7 +4,7 @@ import ProductRow from '../../components/ProductRow'
 
 import Auth from '../../utils/auth'
 
-const Products = () => {
+const Products = ({query}) => {
     const [products, setProducts] = useState()
 
     useEffect(() => {
@@ -32,7 +32,7 @@ const Products = () => {
 
     return (
         <>
-        <Filters />
+        <Filters query={query} />
         <div className="container my-4">
             <div className="row no-gutters header-row bg-secondary text-light cursor-pointer">
                 <div id='tag_id' data-sorted="" className="header-col col-3 border-left border-top border-bottom border-info d-flex align-items-center">
