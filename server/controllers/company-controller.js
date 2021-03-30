@@ -19,7 +19,6 @@ const companyController = {
     },
 
     async showCompanyDashboard (req, res) {
-
         const company = await Company.findById(req.user.company._id)
             .populate({
                 path: 'readers',
@@ -55,6 +54,41 @@ const companyController = {
         })).then(() => {
             res.json(result)
         })
+    },
+
+    async getCompanyFilterData (req, res) {
+        const foundCompany = await Company.findById(req.user.company._id)
+            .populate({
+                path: 'readers',
+                model: 'Reader',
+                populate: {
+                    path: 'antennas',
+                    model: 'Antenna',
+                    populate: {
+                        path: 'reader',
+                        model: 'Reader'
+                    }
+                }
+            })
+            .lean()
+    
+        const company = { 
+            _id: foundCompany._id,
+            display_name: foundCompany.display_name,
+            sys_id: foundCompany.sys_id,
+            readers: foundCompany.readers
+                .map(reader => {
+                    let { antennas, __v, company, ...rest } =  reader
+                    return rest
+                }),
+            antennas: foundCompany.readers
+                .map(reader => reader.antennas)
+                .reduce((acc, curVal) => {
+                    return acc.concat(curVal)
+                }, [])
+        }
+
+        res.json(company)
     },
 
     async updateCompany ({ params, body }, res) {

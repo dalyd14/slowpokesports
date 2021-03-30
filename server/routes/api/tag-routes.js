@@ -8,19 +8,16 @@ const {
     getAllTagsAtMultipleReaders,
     getAllTagsAtMultipleAntennas,
     createNewTag,
+    getTagsFromFilter,
     updateTag,
     deleteTag
 } = require('../../controllers/tag-controller')
 
+const { authMiddleware } = require('../../utils/auth')
+
 router
     .route('/')
     .post(createNewTag)
-
-router
-    .route('/:sys_id')
-    .get(getTag)
-    .put(updateTag)
-    .delete(deleteTag)
 
 router
     .route('/history/:sys_id')
@@ -45,5 +42,15 @@ router
 router
     .route('/byAntennas')
     .post(getAllTagsAtMultipleAntennas)
+
+router
+    .route('/byFilters')
+    .get(authMiddleware, getTagsFromFilter)
+
+router
+    .route('/:sys_id')
+    .get(getTag)
+    .put(updateTag)
+    .delete(deleteTag)
 
 module.exports = router

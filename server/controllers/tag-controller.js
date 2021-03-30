@@ -66,6 +66,47 @@ const tagController = {
         const savedTag = await newTag.save()
         res.json(savedTag)        
     },
+    async getTagsFromFilter ({ user, query }, res) {
+        console.log("HEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRRRRRRREEEEEEEEEEEEEEEEEEE")
+        const filters = {}
+
+        if (!Object.keys(query).length) {    
+            filters.company = user.company._id
+        }
+
+        if ('reader' in query) {
+            filters.reader = {
+                $in: company.readers
+                        .filter(reader => {
+                            if ([].concat(query.reader).includes(reader.sys_id)) {
+                                return reader._id
+                            }
+                        })
+            }
+        }
+    
+        if ('antenna' in query) {
+            filters.antenna = {
+                $in: company.antennas
+                        .filter(antenna => {
+                            if ([].concat(query.antenna).includes(antenna.sys_id)) {
+                                return antenna._id
+                            }
+                        })
+            }
+        }
+    
+        if ('status' in query) {
+            filters.status = query.status
+        }
+
+        const tags = await Tag.find(filters)
+            .populate('reader')
+            .populate('antenna')
+            .lean()
+    
+        res.json(tags)
+    },
     async updateTag({ params, body }, res) {
         const updatedTag = await Tag.findOneAndUpdate(
             { sys_id: params.sys_id },

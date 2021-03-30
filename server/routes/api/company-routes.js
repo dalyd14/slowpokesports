@@ -3,6 +3,7 @@ const {
     getAllCompanies,
     createNewCompany,
     showCompanyDashboard,
+    getCompanyFilterData,
     updateCompany,
     deleteCompany
 } = require('../../controllers/company-controller')
@@ -22,5 +23,9 @@ router
 router
     .route('/dashboard')
     .get(authMiddleware, showCompanyDashboard)
+
+router
+    .route('/filters')
+    .get(authMiddleware, getCompanyFilterData)
 
 module.exports = router
