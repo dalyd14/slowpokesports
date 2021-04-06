@@ -2,6 +2,7 @@ const { Reader, Company, Antenna } = require('../model')
 
 const readerController = {
     async getAllReaders (req, res) {
+        console.log(Reader.db.name)
         const foundReaders = await Reader.find().populate("company", "-readers -_id -__v")
         res.json(foundReaders)
     },
