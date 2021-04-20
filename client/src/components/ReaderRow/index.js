@@ -8,7 +8,7 @@ import UnfoldLessIcon from '@material-ui/icons/UnfoldLess';
 import './reader-row.css'
 import AntennaRow from './AntennaRow'
 
-const ReaderRow = ({ reader }) => {
+const ReaderRow = ({ reader, setFilters }) => {
 
     const [readerExpanded, setReaderExpanded] = useState($(`button[data-target='#subzoneExpand_${reader.sys_id}']`).attr('aria-expanded') === 'true')
 
@@ -17,17 +17,18 @@ const ReaderRow = ({ reader }) => {
         setReaderExpanded(!expanded)
     }
 
-    const query = {
-        reader: [], //<--- array of all readers in which all antennas are selected
-        antenna: [], //<--- array of all antennas that isn't covered by checked reader
-        status: '' //<--- either 'null', 'PRES', 'MISS'      
-    }
-
     const handleProductNav = (reader=[], ants=[], status='') => {
+        const query = {
+            reader: [], //<--- array of all readers in which all antennas are selected
+            antenna: [], //<--- array of all antennas that isn't covered by checked reader
+            status: '' //<--- either 'null', 'PRES', 'MISS'      
+        }
+
         query.reader = reader;
         query.antenna = ants
         query.status = status
 
+        setFilters(query)
         
     }
 
@@ -49,16 +50,16 @@ const ReaderRow = ({ reader }) => {
             <div onClick={() => handleProductNav(reader._id)} data-filter="reader-all" className="col-4 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center">
                 <p className="m-0">All Subzones</p>
             </div>
-            <div data-filter="reader-PRES" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
+            <div onClick={() => handleProductNav(reader._id, undefined, 'PRES')} data-filter="reader-PRES" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
                 <span className="badge zoneBadge badge-pill badge-success text-dark">{reader.tagCountPres}</span>
             </div>
-            <div data-filter="reader-MISS" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
+            <div onClick={() => handleProductNav(reader._id, undefined, 'MISS')} data-filter="reader-MISS" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
                 <span className="badge zoneBadge badge-pill badge-warning">{reader.tagCountMiss}</span>
             </div>
         </div>
         <div className="collapse" id={"subzoneExpand_" + reader.sys_id} >
             {
-                reader.antennas.map(antenna => <AntennaRow key={antenna.sys_id} antenna={antenna} />)
+                reader.antennas.map(antenna => <AntennaRow key={antenna.sys_id} antenna={antenna} setFilters={setFilters} />)
             }
         </div>
         </>

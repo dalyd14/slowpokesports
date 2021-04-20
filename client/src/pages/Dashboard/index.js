@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import ReaderRow from '../../components/ReaderRow'
 import Auth from '../../utils/auth'
 
-const Dashboard = () => {
+const Dashboard = ({ setFilters }) => {
 
     const [dashboard, setDashboard] = useState()
 
@@ -53,7 +53,7 @@ const Dashboard = () => {
                 </div>
 
                 {
-                    dashboard.readers.map(reader => <ReaderRow key={reader.sys_id} reader={reader} />)
+                    dashboard.readers.map(reader => <ReaderRow key={reader.sys_id} reader={reader} setFilters={setFilters} />)
                 }
             </div>
         </section>

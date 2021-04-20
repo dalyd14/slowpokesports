@@ -11,18 +11,18 @@ import Auth from '../../utils/auth'
 //   status: <--- either 'null', 'PRES', 'MISS'   
 // }
 
-const Products = ({ query, all }) => {
+const Products = ({ filters, setFilters }) => {
+    console.log(filters)
     const [products, setProducts] = useState()
-    const [filters, setFilters] = useState(query)
     const [refetch, setRefetch] = useState(false)
+    const [searchString, setSearchString] = useState({ string: '', searchColumn: 'default' })
 
     useEffect(() => {
         const token = Auth.getToken()
 
         const fetchProducts = async token => {
             let tags = await fetch('/api/tag/byFilters', {
-                method: 'POST',
-                body: JSON.stringify(filters), 
+                method: 'POST', 
                 headers: {
                     'Content-Type': 'application/json',
                     authorization: `Bearer ${token}`
@@ -39,6 +39,20 @@ const Products = ({ query, all }) => {
     }
 
     const isTagGood = (tagData) => {
+        const isFilters = doesPassFilters(tagData)
+        if (!isFilters) {
+            return false
+        }
+
+        const isSearch = doesPassSearch(tagData)
+        if (!isSearch) {
+            return false
+        }
+
+        return true
+    }
+
+    const doesPassFilters = (tagData) => {
         if (!filters) {
             return true
         }
@@ -56,9 +70,39 @@ const Products = ({ query, all }) => {
         return false
     }
 
+    const doesPassSearch = (tagData) => {
+
+        const regexString = generateRegex(searchString.string)
+        switch (searchString.searchColumn) {
+            case 'default':
+                return true
+            case 'reader':
+            case 'antenna':
+                return compareValues(
+                    tagData[searchString.searchColumn].display_name,
+                    regexString
+                )
+            default:
+                return compareValues(
+                    tagData[searchString.searchColumn],
+                    regexString
+                )
+        }
+    }
+
+    const compareValues = (tagValue, regexComp) => {
+        return tagValue.toString().toLowerCase().match(regexComp)
+    }
+
+    const generateRegex = (searchString) => {
+        let regexString = searchString.toLowerCase().replaceAll('*', '([ \\w-]*)')
+        regexString = '^' + regexString + '$'
+        return new RegExp(regexString)
+    }
+
     return (
         <>
-        <Filters filters={filters} setFilters={setFilters} all={all} setRefetch={setRefetch} refetch={refetch} />
+        <Filters setFilters={setFilters} setRefetch={setRefetch} refetch={refetch} setSearchString={setSearchString} searchString={searchString} />
         <div className="container my-4">
             <div className="row no-gutters header-row bg-secondary text-light cursor-pointer">
                 <div id='tag_id' data-sorted="" className="header-col col-3 border-left border-top border-bottom border-info d-flex align-items-center">

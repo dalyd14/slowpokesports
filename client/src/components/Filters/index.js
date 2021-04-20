@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import RefreshIcon from '@material-ui/icons/Refresh'
+import { Refresh, Close } from '@material-ui/icons'
 
 import './filters.css'
 
 import Auth from '../../utils/auth'
 
-const Filters = ({ setFilters, setRefetch, refetch }) => {
+const Filters = ({ filters, setFilters, setRefetch, refetch, searchString, setSearchString }) => {
+
     const [companyFilterData, setCompanyFilterData] = useState()
     const [visualFilters, setVisualFilters] = useState({
         readers: {
@@ -32,7 +33,8 @@ const Filters = ({ setFilters, setRefetch, refetch }) => {
             })
             companyFilters = await companyFilters.json()
             setCompanyFilterData(companyFilters)
-            configVisualFilters(companyFilters)
+            configFilters(companyFilters)
+            configVisualFilters(companyFilters, filters)
         }
         fetchFilters(token)
     }, [])
@@ -41,7 +43,23 @@ const Filters = ({ setFilters, setRefetch, refetch }) => {
         setRefetch(!refetch)
     }
 
-    const configVisualFilters = (compFilters) => {
+    const configVisualFilters = (compFilters, preFilters) => {
+        const dummy = {
+            readers: {
+                ind: [],
+                sel: []
+            },
+            antennas: [],
+            status: []
+        }
+        
+        console.log(compFilters, preFilters)
+        if (!preFilters || (!preFilters.reader.length && !preFilters.antenna.length && !preFilters.status)) {
+            setVisualFilters()
+        }
+    }
+
+    const configFilters = (compFilters) => {
         const dummyList = {
             readers: [],
             antennas: []
@@ -83,9 +101,7 @@ const Filters = ({ setFilters, setRefetch, refetch }) => {
             dummy.readers.ind.filter(reader => reader.sys_id !== reader_sys_id)
         }
 
-        console.log(dummy)
         return dummy
-        // setVisualFilters(dummy)
     }
 
     const handleAntennaAndParent = (dummy, select, reader_sys_id, antenna_sys_id) => {
@@ -130,12 +146,13 @@ const Filters = ({ setFilters, setRefetch, refetch }) => {
         
         if (select) {
             dummy.status.push(status)
+        } else if (dummy.status.length === 1) {
+            dummy.status = ['PRES', 'MISS']
         } else {
             dummy.status = dummy.status.filter(stat => stat !== status)
         }
 
         return dummy
-        // setVisualFilters(dummy)
     }
 
     const handleSetFilters = (dummy) => {
@@ -200,6 +217,14 @@ const Filters = ({ setFilters, setRefetch, refetch }) => {
         handleSetFilters(dummy)
     }
 
+    const handleSearchColumnChange = (event) => {
+        setSearchString({ ...searchString, searchColumn: event.target.value })
+    }
+
+    const handleSearchStringChange = (event) => {
+        setSearchString({ ...searchString, string: event.target.value })
+    }
+
     if (!companyFilterData) {
         return <h2>Loading...</h2>
     }
@@ -247,11 +272,11 @@ const Filters = ({ setFilters, setRefetch, refetch }) => {
                             <h4>Status</h4>
                             <div id="status-checklist" className="form-group">
                                 <div className="form-check">
-                                    <input onChange={(event) => handleChange(event, 'status', 'PRES')} className="form-check-input" type="checkbox" id="status-PRES" />
+                                    <input onChange={(event) => handleChange(event, 'status', 'PRES')} className="form-check-input" type="checkbox" checked={visualFilters.status.includes('PRES')} id="status-PRES" />
                                     <label className="form-check-label" htmlFor="status-PRES">Present</label>
                                 </div>
                                 <div className="form-check">
-                                    <input onChange={(event) => handleChange(event, 'status', 'MISS')} className="form-check-input" type="checkbox" id="status-MISS" />
+                                    <input onChange={(event) => handleChange(event, 'status', 'MISS')} className="form-check-input" type="checkbox" checked={visualFilters.status.includes('MISS')} id="status-MISS" />
                                     <label className="form-check-label" htmlFor="status-MISS">Missing</label>
                                 </div>
                             </div>
@@ -264,20 +289,21 @@ const Filters = ({ setFilters, setRefetch, refetch }) => {
                             <h4>Search</h4>
                             <form id="search-form">
                                 <div className="form-group">
-                                    <select id="search-column" className="form-control">
+                                    <select onChange={handleSearchColumnChange} id="search-column" className="form-control" value={searchString.searchColumn}>
                                         <option value="default" defaultValue>Choose Column...</option>
-                                        <option value="tag_id">Tag ID</option>
-                                        <option value="tag_name">Tag Name</option>
-                                        <option value="zone">Zone</option>
-                                        <option value="subzone">Subzone</option>
+                                        <option value="sys_id">Tag ID</option>
+                                        <option value="tagname">Tag Name</option>
+                                        <option value="reader">Zone</option>
+                                        <option value="antenna">Subzone</option>
                                         <option value="status">Status</option>
-                                        <option value="seen">Seen</option>
                                     </select>
                                 </div>
                                 <div className="input-group">
-                                    <input id="product-search-input" type="text" className="form-control" placeholder="Enter Search Term" aria-label="Enter Search Term" />
+                                    <input onChange={handleSearchStringChange} id="product-search-input" type="text" className="form-control" placeholder="Enter Search Term" aria-label="Enter Search Term" value={searchString.string}/>
                                     <div className="input-group-append">
-                                        <button className="btn btn-outline-secondary" type="button" id="button-clear">X</button>
+                                        <button onClick={() => setSearchString({...searchString, string: ''})} className="btn btn-outline-secondary" type="button" id="button-clear">
+                                            <Close />
+                                        </button>
                                     </div>
                                 </div>                
                             </form>    
@@ -286,7 +312,7 @@ const Filters = ({ setFilters, setRefetch, refetch }) => {
                 </div>
                 <div className="col-1">
                     <button onClick={handleRefresh} id="refresh-btn" className="btn mx-auto d-flex justify-content-center align-items-center visible">
-                        <RefreshIcon />
+                        <Refresh />
                     </button>
                 </div>
             </div>

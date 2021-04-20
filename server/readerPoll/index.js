@@ -7,20 +7,8 @@ const { getMostRecentTag, getAllTagsFromCertainTime, updateLastTag } = require('
 const runOperation = async () => {
     const foundReaders = await Reader.find({}).populate('antennas')
 
-    //const pollingReaders = []
-
     foundReaders.forEach(async reader => {
-        //const isPres = pollingReaders.some(pollReader => pollReader._id === reader._id)
         const sessionkey = await handleSessionKey(reader)
-        // if (!isPres) {
-        //     const lastTag = await handleLastTag(reader, sessionkey)
-        //     pollingReaders.push({
-        //         _id: reader._id,
-        //         ip: reader.ip_address,
-        //         sessionkey: sessionkey,
-        //         lastTag: lastTag
-        //     })
-        // }
 
         const lastTag = await handleLastTag(reader, sessionkey)
 
