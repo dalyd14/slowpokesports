@@ -1,11 +1,11 @@
 const db = require('../config/connection')
 
-const { Reader } = require('../model')
+const { Reader, Tag, TagHistory } = require('../model')
 const { getSessionKey, isSessionKeyValid, saveSessionKey } = require('./controllers/admin-controllers')
 const { getMostRecentTag, getAllTagsFromCertainTime, updateLastTag } = require('./controllers/reader-tag-controller')
 
 const runOperation = async () => {
-    const foundReaders = await Reader.find({})
+    const foundReaders = await Reader.find({}).populate('antennas')
 
     //const pollingReaders = []
 
@@ -24,11 +24,81 @@ const runOperation = async () => {
 
         const lastTag = await handleLastTag(reader, sessionkey)
 
-        const recentTags = await getAllTagsFromCertainTime(reader.ip_address, sessionkey, lastTag.seen_unix)
-
-
+        let recentTags = await getAllTagsFromCertainTime(reader.ip_address, sessionkey, lastTag.seen_unix)
+        
+        if (recentTags.results.length) {
+            recentTags = recentTags.results.history_results
+            const isDone = await handleRecentTags(reader, recentTags)
+        }       
         
     });
+}
+
+const handleRecentTags = async (reader, recentTags) => {
+    return new Promise(async (res, rej) => {
+        for (let i = recentTags.length - 1; i >= 0; i--) {
+            const currTag = {
+                sys_id: recentTags[i].tagnumb,
+                tagname: recentTags[i].tagname,
+                status: recentTags[i].current_detectstat,
+                reader: reader._id,
+                antenna: reader.antennas.find(ant => ant.sys_id === recentTags[i].subzone)._id,
+                company: reader.company,
+                seen_unix: recentTags[i].current_access_utc,
+                current: true,
+                SS: recentTags[i].SS
+            }
+            
+            if (i === 0) {
+                const lastTag = {
+                    tagnumb: currTag.sys_id,
+                    status: currTag.status,
+                    seen_unix: currTag.seen_unix,
+                    subzone: currTag.antenna
+                }
+
+                await updateReaderWithNewLastTag(reader, lastTag)
+            }
+
+            const isPres = await Tag.exists({ _id: reader._id })
+            if (isPres) {
+                await updateTag(currTag)
+            } else {
+                await createNewTag(currTag)
+            }
+        }
+        res(true)
+    })
+}
+
+const updateReaderWithNewLastTag = async (reader, lastTag) => {
+    return new Promise(async (res, rej) => {
+        const newReader = await Reader.findByIdAndUpdate(reader._id, { last: lastTag })
+        res(newReader)
+    })
+}
+
+const createNewTag = async (tagData) => {
+    return new Promise(async (res, rej) => {
+        const newTag = await Tag.create(tagData)
+        res(newTag)
+    })
+}
+
+const updateTag = async (tagData) => {
+    return new Promise(async (res, rej) => {
+        const updatedTag = await Tag.findOneAndUpdate(
+            { sys_id: tagData.sys_id },
+            tagData,
+            {new: false}
+        ).lean()
+
+        updatedTag.current = false
+
+        const { _id, __v, ...keep } = updatedTag
+        const newHistoryTag = await TagHistory.create(keep)
+        res(newHistoryTag)
+    })
 }
 
 const handleLastTag = async (reader, sessionkey) => {
@@ -41,10 +111,10 @@ const handleLastTag = async (reader, sessionkey) => {
                 rej('Call to get last tag failed!')
             }
             const lastTag = {
-                tagname: lastTagCall.results.history_results.tagnumb,
-                status: lastTagCall.results.history_results.current_detectstat,
-                seen_unix: lastTagCall.results.history_results.current_access_utc,
-                subzone: lastTagCall.results.history_results.current_subzone
+                tagname: lastTagCall.results.history_results[0].tagnumb,
+                status: lastTagCall.results.history_results[0].current_detectstat,
+                seen_unix: lastTagCall.results.history_results[0].current_access_utc,
+                subzone: lastTagCall.results.history_results[0].current_subzone
             }
             await Reader.findByIdAndUpdate(reader._id, { last: lastTag })
             res(lastTag)

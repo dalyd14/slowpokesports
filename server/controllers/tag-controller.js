@@ -67,7 +67,6 @@ const tagController = {
         res.json(savedTag)        
     },
     async getTagsFromFilter ({ user, body }, res) {
-        console.log("HEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRRRRRRREEEEEEEEEEEEEEEEEEE")
         const filters = {}
 
         if (!body || !Object.keys(body).length) {    
@@ -96,7 +95,6 @@ const tagController = {
             }
         }
         
-        console.log(filters)
         const tags = await Tag.find(filters)
             .populate('reader')
             .populate('antenna')
