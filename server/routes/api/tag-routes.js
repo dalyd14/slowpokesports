@@ -45,7 +45,7 @@ router
 
 router
     .route('/byFilters')
-    .get(authMiddleware, getTagsFromFilter)
+    .post(authMiddleware, getTagsFromFilter)
 
 router
     .route('/:sys_id')

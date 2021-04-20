@@ -90,7 +90,7 @@ const companyController = {
             sys_id: foundCompany.sys_id,
             readers: foundCompany.readers
                 .map(reader => {
-                    let { antennas, __v, company, ...rest } =  reader
+                    let { __v, company, ...rest } =  reader
                     return rest
                 }),
             antennas: foundCompany.readers

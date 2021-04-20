@@ -3,9 +3,10 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema;
 
 const LastReadTagSchema = new Schema({
-    tagname: { type: String, required: true },
+    tagnumb: { type: String, required: true },
     status: { type: String, required: true, enum: ['PRES', 'MISS'] },
-    seen_unix: { type: Number, required: true }
+    seen_unix: { type: Number, required: true },
+    subzone: { type: String, required: true }
 })
 
 const ReaderModelSchema = new Schema({

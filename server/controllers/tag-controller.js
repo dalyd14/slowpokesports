@@ -66,40 +66,37 @@ const tagController = {
         const savedTag = await newTag.save()
         res.json(savedTag)        
     },
-    async getTagsFromFilter ({ user, query }, res) {
+    async getTagsFromFilter ({ user, body }, res) {
         console.log("HEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRRRRRRREEEEEEEEEEEEEEEEEEE")
         const filters = {}
 
-        if (!Object.keys(query).length) {    
+        if (!body || !Object.keys(body).length) {    
             filters.company = user.company._id
         }
 
-        if ('reader' in query) {
-            filters.reader = {
-                $in: company.readers
-                        .filter(reader => {
-                            if ([].concat(query.reader).includes(reader.sys_id)) {
-                                return reader._id
-                            }
-                        })
+        if ('reader' in body) {
+            if (body.reader.length) {
+                filters.reader = {
+                    $in: body.reader
+                }                
             }
-        }
-    
-        if ('antenna' in query) {
-            filters.antenna = {
-                $in: company.antennas
-                        .filter(antenna => {
-                            if ([].concat(query.antenna).includes(antenna.sys_id)) {
-                                return antenna._id
-                            }
-                        })
-            }
-        }
-    
-        if ('status' in query) {
-            filters.status = query.status
         }
 
+        if ('antenna' in body) {
+            if (body.antenna.length) {
+                filters.antenna = {
+                    $in: body.antenna
+                }                
+            }
+        }
+
+        if ('status' in body) {
+            if (body.status) {
+                filters.status = body.status
+            }
+        }
+        
+        console.log(filters)
         const tags = await Tag.find(filters)
             .populate('reader')
             .populate('antenna')
