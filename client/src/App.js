@@ -28,7 +28,7 @@ function App() {
             {loggedin ? <Dashboard /> : <Redirect to="/login" />}
           </Route>
           <Route exact path="/products">
-            {loggedin ? <Products /> : <Redirect to="/login" />}
+            {loggedin ? <Products all={true} /> : <Redirect to="/login" />}
           </Route>
           <Route exact path="/edit">
             {loggedin ? <Edit /> : <Redirect to="/login" />}

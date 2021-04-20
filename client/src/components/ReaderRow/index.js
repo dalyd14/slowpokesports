@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom';
 import $ from 'jquery'
 
 import UnfoldMoreIcon from '@material-ui/icons/UnfoldMore';
@@ -16,6 +17,20 @@ const ReaderRow = ({ reader }) => {
         setReaderExpanded(!expanded)
     }
 
+    const query = {
+        reader: [], //<--- array of all readers in which all antennas are selected
+        antenna: [], //<--- array of all antennas that isn't covered by checked reader
+        status: '' //<--- either 'null', 'PRES', 'MISS'      
+    }
+
+    const handleProductNav = (reader=[], ants=[], status='') => {
+        query.reader = reader;
+        query.antenna = ants
+        query.status = status
+
+        
+    }
+
     return (
         <>
         <div id={'reader-' + reader.sys_id} className="row no-gutters reader-row">
@@ -31,7 +46,7 @@ const ReaderRow = ({ reader }) => {
             <div className="col-3 border-right border-bottom border-info d-flex justify-content-center align-items-center">
                 <p className="m-0">{reader.display_name}</p>
             </div>
-            <div data-filter="reader-all" className="col-4 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center">
+            <div onClick={() => handleProductNav(reader._id)} data-filter="reader-all" className="col-4 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center">
                 <p className="m-0">All Subzones</p>
             </div>
             <div data-filter="reader-PRES" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
