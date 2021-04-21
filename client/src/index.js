@@ -6,9 +6,14 @@ import 'bootstrap/dist/js/bootstrap.min.js';
 import './index.css';
 import App from './App';
 
+import { Provider } from 'react-redux'
+import store from './utils/store'
+
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Provider store={store}>
+      <App />
+    </Provider>
   </React.StrictMode>,
   document.getElementById('root')
 );

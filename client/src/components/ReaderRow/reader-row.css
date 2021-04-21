@@ -16,3 +16,7 @@
 .reader-row > * {
     background-color: #dee2e6;
 }
+.reader-row a {
+    text-decoration: none;
+    color: unset;
+}

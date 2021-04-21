@@ -5,22 +5,15 @@ import './filters.css'
 
 import Auth from '../../utils/auth'
 
-const Filters = ({ filters, setFilters, setRefetch, refetch, searchString, setSearchString }) => {
+import { useSelector, useDispatch } from 'react-redux'
+import { updateReaderSel, updateReaderInd, updateAntenna, updateStatus, selectFilters } from '../../utils/filterSlice'
+
+const Filters = ({ setRefetch, refetch, searchString, setSearchString }) => {
 
     const [companyFilterData, setCompanyFilterData] = useState()
-    const [visualFilters, setVisualFilters] = useState({
-        readers: {
-            ind: [],
-            sel: []
-        },
-        antennas: [],
-        status: []
-    })
 
-    const [filterList, setFilterList] = useState({
-        readers: [],
-        antennas: []
-    })
+    const filters = useSelector(selectFilters)
+    const dispatch = useDispatch()
 
     useEffect(() => {
         const token = Auth.getToken()
@@ -33,8 +26,6 @@ const Filters = ({ filters, setFilters, setRefetch, refetch, searchString, setSe
             })
             companyFilters = await companyFilters.json()
             setCompanyFilterData(companyFilters)
-            configFilters(companyFilters)
-            configVisualFilters(companyFilters, filters)
         }
         fetchFilters(token)
     }, [])
@@ -43,178 +34,87 @@ const Filters = ({ filters, setFilters, setRefetch, refetch, searchString, setSe
         setRefetch(!refetch)
     }
 
-    const configVisualFilters = (compFilters, preFilters) => {
-        const dummy = {
-            readers: {
-                ind: [],
-                sel: []
-            },
-            antennas: [],
-            status: []
-        }
+    const selectAllReadersAntennas = (reader_id) => {
+        const readerAnts = companyFilterData.readers.find(reader => reader._id === reader_id)
+            .antennas.map(ant => ant._id)
+
+        const newAntennaArray = [...filters.antennas]
+        readerAnts.forEach(ant => {
+            if (!newAntennaArray.includes(ant)) {
+                newAntennaArray.push(ant)
+            }
+        });
+
+        dispatch(updateAntenna(newAntennaArray))
+    }
+
+    const deselectAllReadersAntennas = (reader_id) => {
+        const readerAnts = companyFilterData.readers.find(reader => reader._id === reader_id)
+            .antennas.map(ant => ant._id)
+
+        const newAntennaArray = [...filters.antennas].filter(ant => !readerAnts.includes(ant))
+
+        dispatch(updateAntenna(newAntennaArray))
+    }
+
+    const handleReaderIndetOrSel = (newAntArray, reader_id) => {
+        const readerAnts = companyFilterData.readers.find(reader => reader._id === reader_id)
+            .antennas.map(ant => ant._id)
+
+        let i = 0
+        newAntArray.forEach(ant => {
+            if (readerAnts.includes(ant)) {
+                i++
+            }
+        })
         
-        console.log(compFilters, preFilters)
-        if (!preFilters || (!preFilters.reader.length && !preFilters.antenna.length && !preFilters.status)) {
-            setVisualFilters()
-        }
-    }
-
-    const configFilters = (compFilters) => {
-        const dummyList = {
-            readers: [],
-            antennas: []
-        }
-        dummyList.readers = compFilters.readers.map(reader => {
-            return {
-                sys_id: reader.sys_id,
-                antennas: reader.antennas.map(ant => ant.sys_id)
-            }
-        })
-        dummyList.antennas = compFilters.antennas.map(ant => {
-            return {
-                sys_id: ant.sys_id,
-                reader: ant.reader.sys_id
-            }
-        })
-        setFilterList(dummyList)
-    }
-
-    const handleReaderAndKids = (dummy, select, reader_sys_id) => {
-        if (select) {
-            dummy.readers.sel.push(reader_sys_id)
-            dummy.readers.ind = dummy.readers.ind.filter(reader => reader !== reader_sys_id)
-            filterList.readers.find(reader => reader.sys_id === reader_sys_id)
-                .antennas.forEach(ant => {
-                    if (!dummy.antennas.includes(ant)) {
-                        dummy.antennas.push(ant)
-                    }
-                })
-            
-            dummy.readers.ind.filter(reader => reader.sys_id !== reader_sys_id)
+        if (i === 0) {
+            dispatch(updateReaderSel([...filters.readers.sel].filter(reader => reader !== reader_id)))
+            dispatch(updateReaderInd([...filters.readers.ind].filter(reader => reader !== reader_id)))           
+        } else if (i === readerAnts.length) {
+            dispatch(updateReaderSel([...filters.readers.sel, reader_id]))
+            dispatch(updateReaderInd([...filters.readers.ind].filter(reader => reader !== reader_id)))
         } else {
-            dummy.readers.sel = dummy.readers.sel.filter(reader => reader !== reader_sys_id)
-            filterList.readers.find(reader => reader.sys_id === reader_sys_id)
-                .antennas.forEach(ant => {
-                    dummy.antennas = dummy.antennas.filter(antenna => antenna !== ant)
-                })
-        
-            dummy.readers.ind.filter(reader => reader.sys_id !== reader_sys_id)
-        }
-
-        return dummy
-    }
-
-    const handleAntennaAndParent = (dummy, select, reader_sys_id, antenna_sys_id) => {
-        if (select) {
-            dummy.antennas.push(antenna_sys_id)
-            let pres = true
-            filterList.readers.find(reader => reader.sys_id === reader_sys_id)
-                .antennas.forEach(ant => {
-                    if (pres) {
-                        pres = dummy.antennas.includes(ant)                      
-                    }
-                })
-            if (pres) {
-                dummy.readers.sel.push(reader_sys_id)
-                dummy.readers.ind = dummy.readers.ind.filter(reader => reader !== reader_sys_id)
-            } else if (!dummy.readers.ind.includes(reader_sys_id)) {
-                dummy.readers.ind.push(reader_sys_id)
+            dispatch(updateReaderSel([...filters.readers.sel].filter(reader => reader !== reader_id)))
+            if (!filters.readers.ind.includes(reader_id)) {
+                dispatch(updateReaderInd([...filters.readers.ind, reader_id]))
             }
-        } else {
-            dummy.antennas = dummy.antennas.filter(ant => ant !== antenna_sys_id)
-            let pres = false
-            filterList.readers.find(reader => reader.sys_id === reader_sys_id)
-                .antennas.forEach(ant => {
-                    if (!pres) {
-                        pres = dummy.antennas.includes(ant)                      
-                    }
-                })
-                
-            dummy.readers.sel = dummy.readers.sel.filter(reader => reader !== reader_sys_id)
-            if (!pres) {    
-                dummy.readers.ind = dummy.readers.ind.filter(reader => reader !== reader_sys_id)
-            } else if (!dummy.readers.ind.includes(reader_sys_id)) {
-                dummy.readers.ind.push(reader_sys_id)
-            }
-        }
-
-        return dummy
-        // setVisualFilters(dummy)
+        }        
     }
 
-    const handleStatus = (dummy, select, status) => {
-        
-        if (select) {
-            dummy.status.push(status)
-        } else if (dummy.status.length === 1) {
-            dummy.status = ['PRES', 'MISS']
-        } else {
-            dummy.status = dummy.status.filter(stat => stat !== status)
-        }
-
-        return dummy
-    }
-
-    const handleSetFilters = (dummy) => {
-
-        const dummyFilters = {
-            reader: [],
-            antenna: [],
-            status: ''
-        }
-
-        dummy.readers.sel.forEach(reader => {
-            dummyFilters.reader.push(
-                companyFilterData.readers.find(read => read.sys_id === reader)._id
-            )
-        })
-
-        dummy.readers.ind.forEach(reader => {
-            const antennas = filterList.readers.find(read => read.sys_id === reader).antennas
-            antennas.forEach(ant => {
-                if (dummy.antennas.includes(ant)) {
-                    dummyFilters.antenna.push(
-                        companyFilterData.antennas.find(anten => anten.sys_id === ant)._id
-                    )
-                }
-            })
-        })
-
-        if (dummy.status.length === 2 || dummy.status.length === 0) {
-            dummyFilters.status = ''
-        } else {
-            dummyFilters.status = dummy.status[0]
-        }
-        setFilters(dummyFilters)
-        setVisualFilters(dummy)
-    }
-
-    const handleChange = (event, filterType, sys_id, reader_sys_id) => {
+    const handleChange = (event, filterType, _id, reader_id) => {
         const checked = event.target.checked
-        let dummy = { ...visualFilters }
 
         if (filterType === 'reader') {
             if (checked) {
-                dummy = handleReaderAndKids(dummy, true, sys_id)
+                dispatch(updateReaderSel([...filters.readers.sel, _id]))
+                dispatch(updateReaderInd([...filters.readers.ind].filter(reader => reader !== _id)))           
+                selectAllReadersAntennas(_id)
             } else {
-                dummy = handleReaderAndKids(dummy, false, sys_id)
+                dispatch(updateReaderSel(filters.readers.sel.filter(reader => reader !== _id)))
+                deselectAllReadersAntennas(_id)
             }
             
         } else if (filterType === 'antenna') {
             if (checked) {
-                dummy = handleAntennaAndParent(dummy, true, reader_sys_id, sys_id)
+                dispatch(updateAntenna([...filters.antennas, _id]))
+                handleReaderIndetOrSel([...filters.antennas, _id], reader_id)
             } else {
-                dummy = handleAntennaAndParent(dummy, false, reader_sys_id, sys_id)
+                dispatch(updateAntenna(filters.antennas.filter(ant => ant !== _id)))
+                handleReaderIndetOrSel(filters.antennas.filter(ant => ant !== _id), reader_id)
             }
 
         } else if (filterType === 'status') {
             if (checked) {
-                dummy = handleStatus(dummy, true, sys_id)
+                dispatch(updateStatus([...filters.status, _id]))
             } else {
-                dummy = handleStatus(dummy, false, sys_id)
+                if (filters.status.length === 1) {
+                    dispatch(updateStatus(['PRES', 'MISS']))
+                } else {
+                    dispatch(updateStatus(filters.status.filter(stat => stat !== _id)))
+                }
             }
         }
-        handleSetFilters(dummy)
     }
 
     const handleSearchColumnChange = (event) => {
@@ -241,10 +141,10 @@ const Filters = ({ filters, setFilters, setRefetch, refetch, searchString, setSe
                                     companyFilterData.readers.map(reader => (
                                         <div className="form-check" key={reader.sys_id}>
                                             <input 
-                                                onChange={(event) => handleChange(event, 'reader', reader.sys_id)} 
+                                                onChange={(event) => handleChange(event, 'reader', reader._id)} 
                                                 className="form-check-input" type="checkbox" 
-                                                ref={el => el && (el.indeterminate = visualFilters.readers.ind.includes(reader.sys_id))} 
-                                                checked={visualFilters.readers.sel.includes(reader.sys_id)} />
+                                                ref={el => el && (el.indeterminate = filters.readers.ind.includes(reader._id))} 
+                                                checked={filters.readers.sel.includes(reader._id)} />
                                             <label className="form-check-label" htmlFor={"reader-" + reader.sys_id}>{reader.display_name}</label>
                                         </div>                                        
                                     ))
@@ -258,9 +158,9 @@ const Filters = ({ filters, setFilters, setRefetch, refetch, searchString, setSe
                                     companyFilterData.antennas.map(antenna => (
                                         <div className="form-check" key={antenna.sys_id}>
                                             <input 
-                                                onChange={(event) => handleChange(event, 'antenna', antenna.sys_id, antenna.reader.sys_id)} 
+                                                onChange={(event) => handleChange(event, 'antenna', antenna._id, antenna.reader._id)} 
                                                 className="form-check-input" type="checkbox" 
-                                                checked={visualFilters.antennas.includes(antenna.sys_id)}
+                                                checked={filters.antennas.includes(antenna._id)}
                                             />
                                             <label className="form-check-label" htmlFor={"antenna-" + antenna.sys_id}>{antenna.display_name}</label>
                                         </div>
@@ -272,11 +172,11 @@ const Filters = ({ filters, setFilters, setRefetch, refetch, searchString, setSe
                             <h4>Status</h4>
                             <div id="status-checklist" className="form-group">
                                 <div className="form-check">
-                                    <input onChange={(event) => handleChange(event, 'status', 'PRES')} className="form-check-input" type="checkbox" checked={visualFilters.status.includes('PRES')} id="status-PRES" />
+                                    <input onChange={(event) => handleChange(event, 'status', 'PRES')} className="form-check-input" type="checkbox" checked={filters.status.includes('PRES')} id="status-PRES" />
                                     <label className="form-check-label" htmlFor="status-PRES">Present</label>
                                 </div>
                                 <div className="form-check">
-                                    <input onChange={(event) => handleChange(event, 'status', 'MISS')} className="form-check-input" type="checkbox" checked={visualFilters.status.includes('MISS')} id="status-MISS" />
+                                    <input onChange={(event) => handleChange(event, 'status', 'MISS')} className="form-check-input" type="checkbox" checked={filters.status.includes('MISS')} id="status-MISS" />
                                     <label className="form-check-label" htmlFor="status-MISS">Missing</label>
                                 </div>
                             </div>

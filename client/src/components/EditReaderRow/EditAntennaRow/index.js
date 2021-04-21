@@ -32,15 +32,13 @@ const EditAntennaRow = ({ antenna }) => {
         }
 
         try {
-            let newDefaults = await fetch(`/api/antenna/${antenna.sys_id}`, {
+            await fetch(`/api/antenna/${antenna.sys_id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(newValues)
             })
-
-            newDefaults = await newDefaults.json()
 
             setDefaultValues({ ...defaultValues, ...newValues })
             setShowSave(false)

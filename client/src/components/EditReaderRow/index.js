@@ -41,15 +41,13 @@ const EditReaderRow = ({ reader }) => {
         }
 
         try {
-            let newDefaults = await fetch(`/api/reader/${reader.sys_id}`, {
+            await fetch(`/api/reader/${reader.sys_id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(newValues)
             })
-
-            newDefaults = await newDefaults.json()
 
             setDefaultValues({ ...defaultValues, ...newValues })
             setShowSave(false)

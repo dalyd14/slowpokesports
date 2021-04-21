@@ -1,35 +1,51 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
 
 import './antenna-row.css'
 
-const AntennaRow = ({ antenna, setFilters }) => {
+import { useDispatch } from 'react-redux'
+import { updateAll } from '../../../utils/filterSlice'
 
-    const handleProductNav = (reader=[], ants=[], status='') => {
-        const query = {
-            reader: [], //<--- array of all readers in which all antennas are selected
-            antenna: [], //<--- array of all antennas that isn't covered by checked reader
-            status: '' //<--- either 'null', 'PRES', 'MISS'      
-        }
+const AntennaRow = ({ reader, antenna }) => {
 
-        query.reader = reader;
-        query.antenna = ants
-        query.status = status
+    const dispatch = useDispatch()
 
-        setFilters(query)
+    const isReaderIndet = () => {
+        return reader.antennas.length !== 1
+    }
+
+    const handleAntennaRowNav = (antennaSel, status) => {
+
+        const isDet = isReaderIndet()
+
+        dispatch(updateAll({
+            readers: {
+                sel: !isDet ? [antenna.reader] : [],
+                ind: isDet ? [antenna.reader] : []
+            },
+            antennas: antennaSel,
+            status
+        }))
     }
 
     return (
         <div id={"antenna-" + antenna.sys_id} className="row no-gutters antenna-row bg-light">
             <div className="col-1 border-left border-right border-bottom border-info"></div>
             <div className="col-3 border-right border-bottom border-info d-flex justify-content-center align-items-center"></div>
-            <div onClick={() => handleProductNav(undefined, antenna._id, '')} data-filter="antenna-all" className="col-4 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center">
-                <p className="m-0">{antenna.display_name}</p>
+            <div onClick={() => handleAntennaRowNav([antenna._id], ['PRES', 'MISS'])} className="col-4 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center">
+                <Link to={{pathname: '/products'}} className="w-100 h-100 d-flex justify-content-center align-items-center">
+                    <p className="m-0">{antenna.display_name}</p>
+                </Link>
             </div>
-            <div onClick={() => handleProductNav(undefined, antenna._id, 'PRES')} data-filter="antenna-PRES" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
-                <span className="badge subzoneBadge badge-pill badge-success text-dark">{antenna.tagCountPres}</span>
+            <div onClick={() => handleAntennaRowNav([antenna._id], ['PRES'])} className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
+                <Link to={{pathname: '/products'}} className="w-100 h-100 d-flex justify-content-center align-items-center">
+                    <span className="badge subzoneBadge badge-pill badge-success text-dark">{antenna.tagCountPres}</span>
+                </Link>
             </div>
-            <div onClick={() => handleProductNav(undefined, antenna._id, 'MISS')} data-filter="antenna-MISS" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
-                <span className="badge subzoneBadge badge-pill badge-warning">{antenna.tagCountMiss}</span>
+            <div onClick={() => handleAntennaRowNav([antenna._id], ['MISS'])} className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
+                <Link to={{pathname: '/products'}} className="w-100 h-100 d-flex justify-content-center align-items-center">
+                    <span className="badge subzoneBadge badge-pill badge-warning">{antenna.tagCountMiss}</span>
+                </Link>
             </div>
         </div>
     )

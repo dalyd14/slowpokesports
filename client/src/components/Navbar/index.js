@@ -4,11 +4,12 @@ import { Navbar, Nav } from 'react-bootstrap';
 
 import Auth from '../../utils/auth'
 
-const AppNavbar = ({ companyName, loggedIn }) => {
+const AppNavbar = ({ companyName, loggedIn, setFilters }) => {
 
     const handleLogout = () => {
         Auth.logout()
     }
+
     return (
         <Navbar bg="light" variant="light">
             <Navbar.Brand as={Link} to="/">

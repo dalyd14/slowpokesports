@@ -8,7 +8,11 @@ import UnfoldLessIcon from '@material-ui/icons/UnfoldLess';
 import './reader-row.css'
 import AntennaRow from './AntennaRow'
 
-const ReaderRow = ({ reader, setFilters }) => {
+import { useDispatch } from 'react-redux'
+import { updateAll } from '../../utils/filterSlice'
+
+
+const ReaderRow = ({ reader }) => {
 
     const [readerExpanded, setReaderExpanded] = useState($(`button[data-target='#subzoneExpand_${reader.sys_id}']`).attr('aria-expanded') === 'true')
 
@@ -17,19 +21,17 @@ const ReaderRow = ({ reader, setFilters }) => {
         setReaderExpanded(!expanded)
     }
 
-    const handleProductNav = (reader=[], ants=[], status='') => {
-        const query = {
-            reader: [], //<--- array of all readers in which all antennas are selected
-            antenna: [], //<--- array of all antennas that isn't covered by checked reader
-            status: '' //<--- either 'null', 'PRES', 'MISS'      
-        }
+    const dispatch = useDispatch()
 
-        query.reader = reader;
-        query.antenna = ants
-        query.status = status
-
-        setFilters(query)
-        
+    const handleReaderRowNav = (readerSel, status) => {
+        dispatch(updateAll({
+            readers: {
+                sel: readerSel,
+                ind: []
+            },
+            antennas: reader.antennas.map(ant => ant._id),
+            status
+        }))
     }
 
     return (
@@ -47,19 +49,25 @@ const ReaderRow = ({ reader, setFilters }) => {
             <div className="col-3 border-right border-bottom border-info d-flex justify-content-center align-items-center">
                 <p className="m-0">{reader.display_name}</p>
             </div>
-            <div onClick={() => handleProductNav(reader._id)} data-filter="reader-all" className="col-4 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center">
-                <p className="m-0">All Subzones</p>
+            <div onClick={() => handleReaderRowNav([reader._id], ['PRES', 'MISS'])} data-filter="reader-all" className="col-4 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center">
+                <Link to={{pathname: '/products'}} className="w-100 h-100 d-flex justify-content-center align-items-center">
+                    <p className="m-0">All Subzones</p>
+                </Link>
             </div>
-            <div onClick={() => handleProductNav(reader._id, undefined, 'PRES')} data-filter="reader-PRES" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
-                <span className="badge zoneBadge badge-pill badge-success text-dark">{reader.tagCountPres}</span>
+            <div onClick={() => handleReaderRowNav([reader._id], ['PRES'])} data-filter="reader-PRES" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
+                <Link to={{pathname: '/products'}} className="w-100 h-100 d-flex justify-content-center align-items-center">
+                    <span className="badge zoneBadge badge-pill badge-success text-dark">{reader.tagCountPres}</span>
+                </Link>
             </div>
-            <div onClick={() => handleProductNav(reader._id, undefined, 'MISS')} data-filter="reader-MISS" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
-                <span className="badge zoneBadge badge-pill badge-warning">{reader.tagCountMiss}</span>
+            <div onClick={() => handleReaderRowNav([reader._id], ['MISS'])} data-filter="reader-MISS" className="col-2 cursor-pointer border-right border-bottom border-info d-flex justify-content-center align-items-center px-1">
+                <Link to={{pathname: '/products'}} className="w-100 h-100 d-flex justify-content-center align-items-center">
+                    <span className="badge zoneBadge badge-pill badge-warning">{reader.tagCountMiss}</span>
+                </Link>
             </div>
         </div>
         <div className="collapse" id={"subzoneExpand_" + reader.sys_id} >
             {
-                reader.antennas.map(antenna => <AntennaRow key={antenna.sys_id} antenna={antenna} setFilters={setFilters} />)
+                reader.antennas.map(antenna => <AntennaRow key={antenna.sys_id} reader={reader} antenna={antenna} />)
             }
         </div>
         </>
