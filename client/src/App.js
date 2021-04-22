@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Edit from './pages/Edit';
 import Authentication from './pages/Authentication';
+import AddCompany from './pages/AddCompany';
 
 function App() {
   const isLoggedin = Auth.loggedIn()
@@ -38,6 +39,9 @@ function App() {
           </Route>
           <Route exact path="/login">
             {loggedin ? <Redirect to="/" /> : <Authentication login={true} setUser={setUser} setLoggedin={setLoggedin} />}
+          </Route>
+          <Route exact path="/addcompany">
+            {(loggedin && user.company.display_name === 'Effikas') ? <AddCompany /> : <Redirect to="/" /> }
           </Route>
         </Switch>
       </div>

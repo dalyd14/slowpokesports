@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import Filters from '../../components/Filters'
 import ProductRow from '../../components/ProductRow'
 
+import { ArrowDropUp, ArrowDropDown } from '@material-ui/icons'
+
 import Auth from '../../utils/auth'
 
 import { useSelector } from 'react-redux'
@@ -149,27 +151,33 @@ const Products = () => {
         <div className="container my-4">
             <div className="row no-gutters header-row bg-secondary text-light cursor-pointer">
                 <div id='tag_id' onClick={() => handleSort('sys_id')} className="header-col col-3 border-left border-top border-bottom border-info d-flex align-items-center">
-                    <span className="material-icons sort-arrow disable-user-select d-none">keyboard_arrow_up</span>
+                    { sort.column === 'sys_id' && sort.sortDir === 1 && <ArrowDropUp />}
+                    { sort.column === 'sys_id' && sort.sortDir === -1 && <ArrowDropDown />}
                     <h4 className="m-0 mx-auto disable-user-select">Tag ID</h4>
                 </div>
                 <div id='tag_name' onClick={() => handleSort('tagname')} className="header-col col-2 border-left border-top border-bottom border-info d-flex align-items-center">
-                    <span className="material-icons sort-arrow disable-user-select d-none">keyboard_arrow_up</span>
+                    { sort.column === 'tagname' && sort.sortDir === 1 && <ArrowDropUp />}
+                    { sort.column === 'tagname' && sort.sortDir === -1 && <ArrowDropDown />}
                     <h4 className="m-0 mx-auto disable-user-select">Tag Name</h4>
                 </div>
                 <div id='zone' onClick={() => handleSort('reader')} className="header-col col-2 border-left border-top border-bottom border-info d-flex align-items-center">
-                    <span className="material-icons sort-arrow disable-user-select d-none">keyboard_arrow_up</span>
+                    { sort.column === 'reader' && sort.sortDir === 1 && <ArrowDropUp />}
+                    { sort.column === 'reader' && sort.sortDir === -1 && <ArrowDropDown />}
                     <h4 className="m-0 mx-auto disable-user-select">Zone</h4>
                 </div>
                 <div id='subzone' onClick={() => handleSort('antenna')} className="header-col col-2 border-left border-top border-bottom border-info d-flex align-items-center">
-                    <span className="material-icons sort-arrow disable-user-select d-none">keyboard_arrow_up</span>
+                    { sort.column === 'antenna' && sort.sortDir === 1 && <ArrowDropUp />}
+                    { sort.column === 'antenna' && sort.sortDir === -1 && <ArrowDropDown />}
                     <h4 className="m-0 mx-auto disable-user-select">Subzone</h4>
                 </div>
                 <div id='status' onClick={() => handleSort('status')} className="header-col col-1 border-left border-top border-bottom border-info d-flex align-items-center">
-                    <span className="material-icons sort-arrow disable-user-select d-none">keyboard_arrow_up</span>
+                    { sort.column === 'status' && sort.sortDir === 1 && <ArrowDropUp />}
+                    { sort.column === 'status' && sort.sortDir === -1 && <ArrowDropDown />}
                     <h4 className="m-0 mx-auto disable-user-select">Status</h4>
                 </div>
                 <div id='seen' onClick={() => handleSort('seen_unix')} className="header-col col-2 border-left border-right border-top border-bottom border-info d-flex align-items-center">
-                    <span className="material-icons sort-arrow disable-user-select d-none">keyboard_arrow_up</span>
+                    { sort.column === 'seen_unix' && sort.sortDir === 1 && <ArrowDropUp />}
+                    { sort.column === 'seen_unix' && sort.sortDir === -1 && <ArrowDropDown />}
                     <h4 className="m-0 mx-auto disable-user-select">Seen</h4>
                 </div>
             </div>

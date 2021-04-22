@@ -4,7 +4,7 @@ import { Navbar, Nav } from 'react-bootstrap';
 
 import Auth from '../../utils/auth'
 
-const AppNavbar = ({ companyName, loggedIn, setFilters }) => {
+const AppNavbar = ({ companyName, loggedIn }) => {
 
     const handleLogout = () => {
         Auth.logout()
@@ -26,6 +26,11 @@ const AppNavbar = ({ companyName, loggedIn, setFilters }) => {
                     <Nav.Link as={Link} to="/edit">
                         Edit
                     </Nav.Link>
+                    {companyName === 'Effikas' &&
+                        <Nav.Link as={Link} to="/addcompany">
+                            Add Company
+                        </Nav.Link>                    
+                    }
                 </Nav>          
             }
             <Nav className="ml-auto" inline="true">

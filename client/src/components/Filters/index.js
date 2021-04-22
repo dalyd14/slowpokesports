@@ -6,7 +6,7 @@ import './filters.css'
 import Auth from '../../utils/auth'
 
 import { useSelector, useDispatch } from 'react-redux'
-import { updateReaderSel, updateReaderInd, updateAntenna, updateStatus, selectFilters } from '../../utils/filterSlice'
+import { updateReaderSel, updateReaderInd, updateAntenna, updateStatus, updateAll, selectFilters } from '../../utils/filterSlice'
 
 const Filters = ({ setRefetch, refetch, searchString, setSearchString }) => {
 
@@ -125,8 +125,20 @@ const Filters = ({ setRefetch, refetch, searchString, setSearchString }) => {
         setSearchString({ ...searchString, string: event.target.value })
     }
 
-    if (!companyFilterData) {
+    if (!companyFilterData || !filters) {
         return <h2>Loading...</h2>
+    }
+
+    if (!filters.readers.sel.length && !filters.readers.ind.length && !filters.antennas.length && !filters.status.length) {
+        console.log(companyFilterData)
+        dispatch(updateAll({
+            readers: {
+                sel: companyFilterData.readers.map(reader => reader._id),
+                ind: []
+            },
+            antennas: companyFilterData.antennas.map(ant => ant._id),
+            status: ['PRES', 'MISS']
+        }))
     }
 
     return (
@@ -201,7 +213,7 @@ const Filters = ({ setRefetch, refetch, searchString, setSearchString }) => {
                                 <div className="input-group">
                                     <input onChange={handleSearchStringChange} id="product-search-input" type="text" className="form-control" placeholder="Enter Search Term" aria-label="Enter Search Term" value={searchString.string}/>
                                     <div className="input-group-append">
-                                        <button onClick={() => setSearchString({...searchString, string: ''})} className="btn btn-outline-secondary" type="button" id="button-clear">
+                                        <button onClick={() => setSearchString({...searchString, string: ''})} className="btn btn-outline-secondary d-flex align-items-center" type="button" id="button-clear">
                                             <Close />
                                         </button>
                                     </div>
