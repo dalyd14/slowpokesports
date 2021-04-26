@@ -7,10 +7,10 @@ const companyController = {
     },
 
     async createNewCompany ({ body }, res) {
-        const sys_id = body.display_name.trim().split(" ").join("_").toLowerCase()
         const newCompany = new Company({
-            sys_id,
-            display_name: display_name.trim(),
+            sys_id: body.sys_id,
+            display_name: body.display_name,
+            signup_key: body.signup_key,
             readers: []
         })
     

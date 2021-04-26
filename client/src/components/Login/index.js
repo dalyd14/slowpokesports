@@ -32,7 +32,7 @@ const Login = ({setUser}) => {
     }
 
     return (
-        <div>
+        <div className="mx-5">
             <h2>Login</h2>
             <form  onSubmit={handleLogin}>
                 <div className="form-group">

@@ -35,7 +35,7 @@ const Register = ({ setUser, setLoggedin }) => {
     }
 
     return (
-        <div>
+        <div className="mx-5">
             <h2>Register</h2>
             <form onSubmit={handleRegister}>
                 <div className="form-group">
