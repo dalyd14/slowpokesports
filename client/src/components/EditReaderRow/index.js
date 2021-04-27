@@ -41,7 +41,7 @@ const EditReaderRow = ({ reader }) => {
         }
 
         try {
-            await fetch(`/api/reader/${reader.sys_id}`, {
+            await fetch(`/api/reader/${reader._id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'

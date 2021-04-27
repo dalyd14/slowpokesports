@@ -44,7 +44,7 @@ const antennaController = {
     },
     async updateAntenna ({ params, body }, res) {
         const updatedAntenna = await Antenna.findOneAndUpdate(
-            {sys_id: params.sys_id},
+            {_id: params._id},
             body,
             {new: true}
         )
@@ -53,7 +53,7 @@ const antennaController = {
     },
     async deleteAntenna ({ params }, res) {
         const removedAntenna = await Antenna.findOneAndDelete({
-            sys_id: params.sys_id
+            _id: params._id
         })
     
         const updatedReader = await Reader.findByIdAndUpdate(

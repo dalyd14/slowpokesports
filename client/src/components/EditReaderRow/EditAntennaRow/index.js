@@ -32,7 +32,7 @@ const EditAntennaRow = ({ antenna }) => {
         }
 
         try {
-            await fetch(`/api/antenna/${antenna.sys_id}`, {
+            await fetch(`/api/antenna/${antenna._id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'

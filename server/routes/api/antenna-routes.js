@@ -17,7 +17,7 @@ router
     .get(getAllAntennasAtCompany)
 
 router
-    .route('/:sys_id')
+    .route('/:_id')
     .put(updateAntenna)
     .delete(deleteAntenna)
 

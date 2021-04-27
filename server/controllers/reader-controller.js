@@ -34,7 +34,7 @@ const readerController = {
     },
     async updateReader ({ params, body }, res) {
         const updatedReader = await Reader.findOneAndUpdate(
-            {sys_id: params.sys_id},
+            {_id: params._id},
             body,
             {new: true}
         )
@@ -43,7 +43,7 @@ const readerController = {
     },
     async deleteReader ({ params }, res) {
         const removedReader = await Reader.findOneAndDelete({
-            sys_id: params.sys_id
+            _id: params._id
         })
     
         const updatedCompany = await Company.findByIdAndUpdate(

@@ -1,0 +1,19 @@
+.subzoneBadge {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    width: 60%;
+    height: 60%;
+
+    font-size: 1.2rem
+}
+
+.row {
+    height: 50px;
+}
+
+.antenna-row a {
+    text-decoration: none;
+    color: unset;
+}

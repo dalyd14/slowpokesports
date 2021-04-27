@@ -13,7 +13,7 @@ router
     .post(createReader)
 
 router
-    .route('/:sys_id')
+    .route('/:_id')
     .put(updateReader)
     .delete(deleteReader)
 

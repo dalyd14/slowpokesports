@@ -10,13 +10,13 @@ const LastReadTagSchema = new Schema({
 })
 
 const ReaderModelSchema = new Schema({
-    sys_id: { type: String, required:  true, unique: true },
-    display_name: { type: String, required:  true },
-    ip_address: { type: String, required:  true, unique: true },
+    sys_id: { type: String, required: true },
+    display_name: { type: String, required: true },
+    ip_address: { type: String, required: true, unique: true },
     sessionkey: { type: String },
-    emailRfrain: { type: String, required:  true, unique: true },
-    passwordRfrain: { type: String, required:  true, unique: true },
-    cnameRfrain: { type: String, required:  true, unique: true },
+    emailRfrain: { type: String, required: true },
+    passwordRfrain: { type: String, required: true },
+    cnameRfrain: { type: String, required: true },
     last: { type: LastReadTagSchema, required: false},
     location_description: { type: String, required:  true },
     company: { type: Schema.Types.ObjectId, ref: "Company" },
