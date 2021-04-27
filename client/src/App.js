@@ -12,6 +12,7 @@ import Edit from './pages/Edit';
 import Authentication from './pages/Authentication';
 import AddCompany from './pages/AddCompany';
 import Settings from './pages/Settings'
+import ProductLife from './pages/ProductLife';
 
 function App() {
   const isLoggedin = Auth.loggedIn()
@@ -31,6 +32,9 @@ function App() {
           </Route>
           <Route exact path="/products">
             {loggedin ? <Products /> : <Redirect to="/login" />}
+          </Route>
+          <Route exact path="/product/:sys_id">
+            {loggedin ? <ProductLife /> : <Redirect to="/login" />}
           </Route>
           <Route exact path="/edit">
             {loggedin ? <Edit /> : <Redirect to="/login" />}

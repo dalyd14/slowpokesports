@@ -5,6 +5,7 @@ const { getSessionKey, isSessionKeyValid, saveSessionKey } = require('./controll
 const { getMostRecentTag, getAllTagsFromCertainTime, updateLastTag } = require('./controllers/reader-tag-controller')
 
 const runOperation = async () => {
+    console.log('here')
     const foundReaders = await Reader.find({}).populate('antennas')
 
     foundReaders.forEach(async reader => {
@@ -150,5 +151,5 @@ const newSesionKey = async (ip, email, password, cname) => {
 db.once('open', () => {
     setInterval(function() {
         runOperation()
-    }, 10 * 1000)
+    }, 20 * 1000)
 })

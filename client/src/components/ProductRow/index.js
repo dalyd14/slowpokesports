@@ -1,5 +1,9 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
+
 import moment from 'moment'
+
+import './product-row.css'
 
 const ProductRow = ({product}) => {
     const convertEpoch = epoch => {
@@ -18,9 +22,11 @@ const ProductRow = ({product}) => {
     }
 
     return (
-        <div className="row no-gutters">
+        <div className="row no-gutters product-row">
             <div data-sort={product.sys_id} data-column="tag_id" className="col-3 border-left border-right border-bottom border-info d-flex justify-content-center align-items-center">
-                <a className="m-0 text-body" href="/company/{{../company.sys_id}}/product/{{sys_id}}">{product.sys_id}</a>
+                <Link to={{pathname: `/product/${product.sys_id}`}} className="w-100 h-100 d-flex justify-content-center align-items-center">
+                    < p className="m-0">{product.sys_id}</p>
+                </Link>
             </div>
             <div data-sort={product.tagname} data-column="tag_name" className="col-2 border-right border-bottom border-info d-flex justify-content-center align-items-center">
                 <p className="m-0">{product.tagname}</p>

@@ -8,10 +8,19 @@ const tagController = {
         res.json(foundTags)        
     },
     async getTagHistory({ params }, res) {
+        const currentTag = await Tag.findOne({ sys_id: params.sys_id })
+            .populate('reader')
+            .populate('antenna')
+            .lean()
+  
         const foundTags = await TagHistory.find({ sys_id: params.sys_id })
             .sort({ seen_unix: 'desc' })
             .populate('reader')
             .populate('antenna')
+            .lean()
+        
+        foundTags.unshift(currentTag)
+        
         res.json(foundTags)
     },
     async getAllTagsAtCompany ({ params }, res) {
