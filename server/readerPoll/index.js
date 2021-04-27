@@ -5,7 +5,6 @@ const { getSessionKey, isSessionKeyValid, saveSessionKey } = require('./controll
 const { getMostRecentTag, getAllTagsFromCertainTime, updateLastTag } = require('./controllers/reader-tag-controller')
 
 const runOperation = async () => {
-    console.log('here')
     const foundReaders = await Reader.find({}).populate('antennas')
 
     foundReaders.forEach(async reader => {
@@ -142,9 +141,12 @@ const handleSessionKey = async (reader) => {
                                                                            
 const newSesionKey = async (ip, email, password, cname) => {
     return new Promise ( async (res, rej) => {
-        const { results } = await getSessionKey(ip, email, password, cname)
-        const isSuccess = await saveSessionKey(ip, results.sessionkey)
-        res(isSuccess ? results.sessionkey : false)        
+        const results = await getSessionKey(ip, email, password, cname)
+        if (!results) {
+            return
+        }
+        const isSuccess = await saveSessionKey(ip, results.results.sessionkey)
+        res(isSuccess ? results.results.sessionkey : false)        
     })
 }
 

@@ -12,21 +12,26 @@ const readerController = {
         res.json(company.readers)
     },
     async createReader ({ body }, res) {
-        const sys_id = body.display_name.trim().split(" ").join("_").toLowerCase()
 
         const newReader = new Reader({
-            sys_id,
+            sys_id: body.sys_id,
             display_name: body.display_name.trim(),
             ip_address: body.ip_address,
             location_description: body.location_description,
+            cnameRfrain: body.cnameRfrain,
+            emailRfrain: body.emailRfrain,
+            passwordRfrain: body.passwordRfrain,
+            sessionkey: body.sessionkey,
+            last: body.last,
             company: body.company,
             antennas: body.antennas
         })
     
-        const savedReader = await newReader.save()
+        let savedReader = await newReader.save()
+        savedReader = await savedReader.populate('antennas').execPopulate()
     
         const updatedCompany = await Company.findByIdAndUpdate(
-            req.body.company,
+            body.company,
             { $push: { "readers": savedReader._id } }   
         )
     

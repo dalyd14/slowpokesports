@@ -10,7 +10,7 @@ const ProductLife = () => {
     const [tags, setTags] = useState([])
     const { sys_id } = useParams()
     
-    useEffect( async () => {
+    useEffect(() => {
         const token = Auth.getToken()
 
         const getTagHistory = async token => {

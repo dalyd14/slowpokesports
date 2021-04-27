@@ -3,7 +3,7 @@ import React from 'react'
 const Home = ({companyName}) => {
 
     return (
-        <h1>Welcome to {companyName || "Default"}</h1>
+        <h1>Welcome to {companyName || "Effikas"}</h1>
     )
 }
 

@@ -23,17 +23,16 @@ const antennaController = {
         res.json(antennas)
     },
     async createAntenna ({ body }, res) {
-        const sys_id = body.display_name.trim().split(" ").join("_").toLowerCase()
-
         const newAntenna = new Antenna({
-            sys_id,
+            sys_id: body.sys_id,
             display_name: body.display_name.trim(),
             location_description: body.location_description,
             company: body.company,
             reader: body.reader
         })
     
-        const savedAntenna = await newAntenna.save()
+        let savedAntenna = await newAntenna.save()
+        savedAntenna = await savedAntenna.populate('reader').execPopulate()
     
         const updatedReader = await Reader.findByIdAndUpdate(
             body.reader,

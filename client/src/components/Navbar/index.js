@@ -13,7 +13,7 @@ const AppNavbar = ({ companyName, loggedIn }) => {
     return (
         <Navbar bg="light" variant="light">
             <Navbar.Brand as={Link} to="/">
-                {companyName ? companyName : "Default"}
+                {companyName ? companyName : "Effikas"}
             </Navbar.Brand>
             {loggedIn && 
                 <Nav className="mr-auto">
