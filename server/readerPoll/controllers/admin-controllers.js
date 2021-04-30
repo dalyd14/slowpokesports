@@ -43,7 +43,7 @@ const adminController = {
                 const { results } = await res.json()
                 resolve( results.is_valid )                
             } catch (e) {
-                resolve( false )
+                resolve(false)
             }
         })
     },

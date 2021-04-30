@@ -2,24 +2,35 @@ const db = require('../config/connection')
 
 const { Reader, Tag, TagHistory } = require('../model')
 const { getSessionKey, isSessionKeyValid, saveSessionKey } = require('./controllers/admin-controllers')
-const { getMostRecentTag, getAllTagsFromCertainTime, updateLastTag } = require('./controllers/reader-tag-controller')
+const { getReaderRecentTags } = require('./controllers/reader-tag-controller')
 
 const runOperation = async () => {
+    console.log(`\nStart Polling for Updates...\n`)
     const foundReaders = await Reader.find({}).populate('antennas')
 
     foundReaders.forEach(async reader => {
-        const sessionkey = await handleSessionKey(reader)
+        try {
+            const sessionkey = await handleSessionKey(reader)
 
-        const lastTag = await handleLastTag(reader, sessionkey)
-
-        let recentTags = await getAllTagsFromCertainTime(reader.ip_address, sessionkey, lastTag.seen_unix)
-        
-        if (recentTags.results.length) {
-            recentTags = recentTags.results.history_results
-            const isDone = await handleRecentTags(reader, recentTags)
-        }       
-        
+            let recentTags = await getReaderRecentTags(reader.ip_address, sessionkey)
+            
+            if (!recentTags.success) {
+                console.error(`Reader: ${reader.display_name} | IP: ${reader.ip_address} || There was an error while making recent tag call`)
+            } else {
+                if (recentTags.results.taglist.length > 0) {
+                    console.log(`Reader: ${reader.display_name} | IP: ${reader.ip_address} || There were ${recentTags.results.taglist.length} new update(s) found`)
+                    recentTags = recentTags.results.taglist
+                    const isDone = await handleRecentTags(reader, recentTags)
+                } else {
+                    console.log(`Reader: ${reader.display_name} | IP: ${reader.ip_address} || No new updates found`)
+                }                
+            }            
+        } catch (e) {
+            console.log(e)
+        }
     });
+
+    // console.log('Polling Complete')
 }
 
 const handleRecentTags = async (reader, recentTags) => {
@@ -28,27 +39,19 @@ const handleRecentTags = async (reader, recentTags) => {
             const currTag = {
                 sys_id: recentTags[i].tagnumb,
                 tagname: recentTags[i].tagname,
-                status: recentTags[i].current_detectstat,
+                status: recentTags[i].detectstat,
                 reader: reader._id,
-                antenna: reader.antennas.find(ant => ant.sys_id === recentTags[i].subzone)._id,
                 company: reader.company,
-                seen_unix: recentTags[i].current_access_utc,
+                seen_unix: recentTags[i].access_utc,
                 current: true,
                 SS: recentTags[i].SS
             }
-            
-            if (i === 0) {
-                const lastTag = {
-                    tagnumb: currTag.sys_id,
-                    status: currTag.status,
-                    seen_unix: currTag.seen_unix,
-                    subzone: currTag.antenna
-                }
 
-                await updateReaderWithNewLastTag(reader, lastTag)
+            if (recentTags[i].subzone) {
+                currTag.antenna = reader.antennas.find(ant => ant.sys_id === recentTags[i].subzone)._id
             }
 
-            const isPres = await Tag.exists({ _id: reader._id })
+            const isPres = await Tag.exists({ sys_id: currTag.sys_id })
             if (isPres) {
                 await updateTag(currTag)
             } else {
@@ -56,13 +59,6 @@ const handleRecentTags = async (reader, recentTags) => {
             }
         }
         res(true)
-    })
-}
-
-const updateReaderWithNewLastTag = async (reader, lastTag) => {
-    return new Promise(async (res, rej) => {
-        const newReader = await Reader.findByIdAndUpdate(reader._id, { last: lastTag })
-        res(newReader)
     })
 }
 
@@ -89,27 +85,6 @@ const updateTag = async (tagData) => {
     })
 }
 
-const handleLastTag = async (reader, sessionkey) => {
-    return new Promise(async (res, rej) => {
-        if (reader.last?.tagname) {
-            res(reader.last)
-        } else {
-            const lastTagCall = await getMostRecentTag(reader.ip_address, sessionkey)
-            if (!lastTagCall.success) {
-                rej('Call to get last tag failed!')
-            }
-            const lastTag = {
-                tagname: lastTagCall.results.history_results[0].tagnumb,
-                status: lastTagCall.results.history_results[0].current_detectstat,
-                seen_unix: lastTagCall.results.history_results[0].current_access_utc,
-                subzone: lastTagCall.results.history_results[0].current_subzone
-            }
-            await Reader.findByIdAndUpdate(reader._id, { last: lastTag })
-            res(lastTag)
-        }
-    })
-}
-
 const handleSessionKey = async (reader) => {
     return new Promise(async (res, rej) => {
         if (reader.sessionkey) {
@@ -117,32 +92,38 @@ const handleSessionKey = async (reader) => {
             if (isValid) {
                 res(reader.sessionkey)
             } else {
-                const key1 = await newSesionKey(reader.ip_address, reader.emailRfrain, reader.passwordRfrain, reader.cnameRfrain)
+                let key1
+                try {
+                    key1 = await newSesionKey(reader.ip_address, reader.emailRfrain, reader.passwordRfrain, reader.cnameRfrain)
+                } catch (e) {
+                    console.log(e)
+                }
                 if (key1) {
                     Reader.findByIdAndUpdate(reader._id, { sessionkey: key1 })
                     res(key1)
-                } else {
-                    rej("unable to get session key")
                 }
             }
         } else {
-            const key2 = await newSesionKey(reader.ip_address, reader.emailRfrain, reader.passwordRfrain, reader.cnameRfrain)
+            let key2
+            try {
+                key2 = await newSesionKey(reader.ip_address, reader.emailRfrain, reader.passwordRfrain, reader.cnameRfrain, reader.display_name)
+            } catch (e) {
+                console.log(e)
+            }
             if (key2) {
                 Reader.findByIdAndUpdate(reader._id, { sessionkey: key2 })
                 res(key2)
-            }
-            else {
-                rej("unable to get session key")
             }
         }        
     })
 
 }
                                                                            
-const newSesionKey = async (ip, email, password, cname) => {
+const newSesionKey = async (ip, email, password, cname, readerName) => {
     return new Promise ( async (res, rej) => {
         const results = await getSessionKey(ip, email, password, cname)
         if (!results) {
+            rej(`Reader: ${readerName} | IP: ${ip} || Unable to get session key`)
             return
         }
         const isSuccess = await saveSessionKey(ip, results.results.sessionkey)
