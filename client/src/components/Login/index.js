@@ -3,6 +3,7 @@ import Auth from '../../utils/auth'
 
 const Login = ({setUser}) => {
     const [loginUser, setLoginUser] = useState({})
+    const [errorStatus, setError] = useState()
 
     const handleChange = (e) => {
         e.preventDefault()
@@ -16,19 +17,29 @@ const Login = ({setUser}) => {
             return
         }
 
-        const newUser = await fetch('/api/user/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(loginUser)
-        })
+        try {
+            const newUser = await fetch('/api/user/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(loginUser)
+            })
 
-        const { user, token } = await newUser.json()
+            if (!newUser.ok) {
+                setError('The username and password combination was not found!')
+                return
+            }
 
-        setUser(user)
+            const { user, token } = await newUser.json()
 
-        Auth.login(token)
+            setUser(user)
+
+            Auth.login(token)            
+        } catch (error) {
+            console.error(error)
+        }
+
     }
 
     return (
@@ -44,7 +55,10 @@ const Login = ({setUser}) => {
                     <input onChange={handleChange} type="password" className="form-control" id="password" aria-describedby="passwordHelp" />
                 </div>
                 <button type="submit" className="btn btn-primary">Submit</button>
-            </form>            
+            </form>
+            { errorStatus && 
+                <p className="text-center text-danger">{errorStatus}</p>
+            }          
         </div>
     )
 }

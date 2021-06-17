@@ -58,12 +58,14 @@ const userController = {
             })
         if (!loginUser) {
             res.status(400).json({ message: 'Incorrect credentials'})
+            return
         }
 
         const correctPw = await loginUser.comparePassword(body.password)
 
         if (!correctPw) {
             res.status(400).json({ message: 'Incorrect credentials'})
+            return
         }
 
         const user = {
