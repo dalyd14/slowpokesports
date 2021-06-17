@@ -18,16 +18,20 @@ const Dashboard = () => {
             })
 
             dashboardData = await dashboardData.json()
-
-            setDashboard(dashboardData)            
+            setDashboard(dashboardData)
         }
-
         fetchDashboard(token)
     }, [])
 
     if (!dashboard) {
         return (
-            <h2>Loading</h2>
+            <h2 className="text-center">Loading...</h2>
+        )
+    }
+
+    if (!dashboard.readers.length) {
+        return (
+            <h2 className="text-center">There is nothing to display yet!</h2>
         )
     }
 

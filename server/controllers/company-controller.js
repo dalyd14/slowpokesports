@@ -48,6 +48,10 @@ const companyController = {
             readers: []
         }
 
+        if (company.readers.length === 0) {
+            res.json(result)
+            return
+        }
         Promise.all(await company.readers.map(async reader => {
             reader.tagCountPres = await Tag.countDocuments({ reader: reader._id, status: 'PRES', current: true }),
             reader.tagCountMiss = await Tag.countDocuments({ reader: reader._id, status: 'MISS', current: true })

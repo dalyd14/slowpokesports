@@ -29,11 +29,11 @@ const ProductLife = () => {
         }
 
         getTagHistory(token)
-    }, [])
+    }, [sys_id])
 
     const addNotes = (tagArr) => {
         const reversedArr = tagArr.reverse()
-        let lastReader = reversedArr[0].reader.sys_id
+        //let lastReader = reversedArr[0].reader.sys_id
         let lastAntenna = reversedArr[0].antenna.sys_id
         let lastStatus = reversedArr[0].status
     
@@ -85,7 +85,7 @@ const ProductLife = () => {
                 }
                 
             }
-            lastReader = reversedArr[i].reader.sys_id
+            //lastReader = reversedArr[i].reader.sys_id
             lastAntenna = reversedArr[i].antenna.sys_id
             lastStatus = reversedArr[i].status
         }
@@ -95,8 +95,6 @@ const ProductLife = () => {
     if (!tags.length) {
         return <h2>Loading...</h2>
     }
-
-    console.log(tags)
 
     return (
         <>

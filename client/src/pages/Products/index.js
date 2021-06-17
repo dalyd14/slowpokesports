@@ -42,7 +42,11 @@ const Products = () => {
     }, [refetch])
 
     if(!products) {
-        return <h2>Loading......</h2>
+        return <h2 className="text-center">Loading...</h2>
+    }
+
+    if(!products.length) {
+        return <h2 className="text-center">There is nothing to view yet!</h2>
     }
 
     if (sort.column && sort.sortDir) {

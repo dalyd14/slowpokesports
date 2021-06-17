@@ -46,10 +46,9 @@ const Settings = () => {
     }
 
 
+    console.log(companyFilterData)
     if (!companyFilterData) {
-        return (
-            <h2>Loading...</h2>
-        )
+        return <h2 className="text-center">Loading...</h2>
     }
 
     let itemInfo
@@ -79,6 +78,9 @@ const Settings = () => {
                 <button onClick={() => handleNewItem('Antenna') } className="btn btn-success ml-3"><span className="mr-1"><AddCircleOutlineIcon /></span> Add Antenna</button>                
             </div>
 
+            { !companyFilterData.readers.length ?
+            <h2 className="text-center">Create your first reader!</h2>
+            :
             <div className="container text-center">
                 <div className="row no-gutters header-row bg-secondary text-light">
                     <div className="col-1 border-left border-top border-bottom border-info d-flex align-items-center justify-content-center"></div>
@@ -96,6 +98,7 @@ const Settings = () => {
                     companyFilterData.readers.map(reader => <SettingsReaderRow key={reader.sys_id} reader={reader} setCurrentItem={setCurrentItem} />)
                 }
             </div>
+            }
         </section>
     )
 }

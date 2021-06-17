@@ -7,8 +7,6 @@ const SettingsNewItemModal = ({ setNewItem, newItem, companyFilterData }) => {
 
     const [newValues, setNewValues] = useState({})
 
-    console.log(companyFilterData)
-
     const handleSubmit = async (event) => {
         event.preventDefault()
         
@@ -128,7 +126,6 @@ const SettingsNewItemModal = ({ setNewItem, newItem, companyFilterData }) => {
     const handleChange = (event, key) => {
         let trackValues = newValues
         trackValues[key] = event.target.value
-        console.log(trackValues)
         setNewValues(trackValues)
     }
 

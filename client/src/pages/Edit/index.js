@@ -30,6 +30,10 @@ const Edit = () => {
         return <h2>Loading...</h2>
     }
 
+    if (!companyEquipment.readers.length) {
+        return <h2 className="text-center">You do not have any readers yet!</h2>
+    }
+
     return (
         <section id="reader-overview" className="mt-5">
             <div id="edit-zones-container" className="container text-center">
@@ -53,7 +57,7 @@ const Edit = () => {
                     </div>
                 </div>
                 { companyEquipment.readers.map(reader => <EditReaderRow reader={reader} key={reader.sys_id} />) }
-            </div> 
+            </div>
         </section>
     )
 }
