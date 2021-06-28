@@ -1,7 +1,5 @@
 const db = require('../config/connection')
 
-const TIME_INTERVAL = 20
-
 const { Reader, Tag, TagHistory } = require('../model')
 const { getSessionKey, isSessionKeyValid, saveSessionKey } = require('./controllers/admin-controllers')
 const { getReaderRecentTags } = require('./controllers/reader-tag-controller')
@@ -57,11 +55,7 @@ const handleRecentTags = async (reader, recentTags) => {
             if (isPres) {
                 await updateTag(currTag)
             } else {
-                try {
-                    await createNewTag(currTag)
-                } catch (e) {
-                    console.log(e)
-                }
+                await createNewTag(currTag)
             }
         }
         res(true)
@@ -70,28 +64,24 @@ const handleRecentTags = async (reader, recentTags) => {
 
 const createNewTag = async (tagData) => {
     return new Promise(async (res, rej) => {
-        if (tagData.antenna) {
-            const newTag = await Tag.create(tagData)
-            res(newTag)            
-        } else {
-            rej("A tag did not have a subzone, therefore, it will not be added")
-        }
+        const newTag = await Tag.create(tagData)
+        res(newTag)
     })
 }
 
 const updateTag = async (tagData) => {
     return new Promise(async (res, rej) => {
-            const updatedTag = await Tag.findOneAndUpdate(
-                { sys_id: tagData.sys_id },
-                tagData,
-                { new: false }
-            ).lean()
+        const updatedTag = await Tag.findOneAndUpdate(
+            { sys_id: tagData.sys_id },
+            tagData,
+            {new: false}
+        ).lean()
 
-            updatedTag.current = false
+        updatedTag.current = false
 
-            const { _id, __v, ...keep } = updatedTag
-            const newHistoryTag = await TagHistory.create(keep)
-            res(newHistoryTag)
+        const { _id, __v, ...keep } = updatedTag
+        const newHistoryTag = await TagHistory.create(keep)
+        res(newHistoryTag)
     })
 }
 
@@ -144,5 +134,5 @@ const newSesionKey = async (ip, email, password, cname, readerName) => {
 db.once('open', () => {
     setInterval(function() {
         runOperation()
-    }, TIME_INTERVAL * 1000)
+    }, 20 * 1000)
 })
