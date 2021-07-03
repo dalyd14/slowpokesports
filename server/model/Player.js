@@ -4,8 +4,10 @@ const Schema = mongoose.Schema;
 
 const PlayerModelSchema = new Schema({
     display_name: { type: String, required: true },
-    users_id: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    league_id: { type: Schema.Types.ObjectId, ref: "League", unique: true, required: true },
+    owner: { type: Boolean, required: true },
+    collaborative: { type: Boolean, required: true },
+    users: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    league: { type: Schema.Types.ObjectId, ref: "League", unique: true, required: true },
 });
 
 const Player = mongoose.model("Player", PlayerModelSchema, "Player")

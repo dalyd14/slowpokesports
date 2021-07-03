@@ -23,6 +23,14 @@ const PickHistoryModelSchema = new Schema({
     ]
 });
 
+const StandingsModelSchema = new Schema({
+    player_id: { type: Schema.Types.ObjectId, ref: "Player", required: true },
+    points: { type: Number, required: true },
+    credits: { type: Number, required: true },
+    correct: { type: Number, required: true },
+    wrong: { type: Number, required: true }
+})
+
 const LeagueModelSchema = new Schema({
     league_id: { type: String, unique: true, required: true },
     signup_key: { type: String, unique: true, required: true },
@@ -32,6 +40,7 @@ const LeagueModelSchema = new Schema({
     users: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
     players: [{ type: Schema.Types.ObjectId, ref: "Player", required: true }],
     banned_players: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    standings: [{ type: StandingsModelSchema, required: false}],
     pick_history: [{ type: PickHistoryModelSchema, required: false}]
 });
 

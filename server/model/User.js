@@ -3,16 +3,6 @@ const bcrypt = require('bcrypt');
 
 const Schema = mongoose.Schema;
 
-//League settings for a User
-const UserLeagueModelSchema = new Schema(
-    {
-        league_id: { type: Schema.Types.ObjectId, ref: "League" },
-        player_name: { type: String, required: true },
-        collaborative: { type: Boolean, required: true },
-        owner: { type: Boolean, required: true }
-    }
-);
-
 //This is creating our user model
 const UserModelSchema = new Schema(
     {
@@ -20,7 +10,7 @@ const UserModelSchema = new Schema(
         password: { type: String, required: true },
         first_name: { type: String, required: true },
         last_name: { type: String, required: true },
-        leagues: [{ type: UserLeagueModelSchema, required: false}]
+        players: [{ type: Schema.Types.ObjectId, ref: "Player" }]
     }
 );
 
