@@ -2,7 +2,6 @@ const router = require('express').Router();
 const {
     getAllUsers,
     getOneUser,
-    getAllUsersAtCompany,
     createNewUser,
     loginUser,
     deleteUser
@@ -23,9 +22,5 @@ router
     .route('/:username')
     .get(getOneUser)
     .delete(deleteUser)
-
-router
-    .route('/byCompany/:id')
-    .get(getAllUsersAtCompany)
 
 module.exports = router

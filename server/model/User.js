@@ -1,19 +1,26 @@
 const mongoose = require('mongoose')
-// const mongoose = require('../config/connection')
 const bcrypt = require('bcrypt');
 
 const Schema = mongoose.Schema;
 
+//League settings for a User
+const UserLeagueModelSchema = new Schema(
+    {
+        league_id: { type: Schema.Types.ObjectId, ref: "League" },
+        player_name: { type: String, required: true },
+        collaborative: { type: Boolean, required: true },
+        owner: { type: Boolean, required: true }
+    }
+);
+
 //This is creating our user model
 const UserModelSchema = new Schema(
     {
-        username: { type: String, required: true, unique: true },
         email: { type: String, required: true, unique: true },
         password: { type: String, required: true },
         first_name: { type: String, required: true },
         last_name: { type: String, required: true },
-        permission: { type: String, required: true, enum: ['effikas', 'owner', 'admin', 'employee'] },
-        company: { type: Schema.Types.ObjectId, ref: "Company", required: true }
+        leagues: [{ type: UserLeagueModelSchema, required: false}]
     }
 );
 

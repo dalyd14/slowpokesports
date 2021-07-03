@@ -1,5 +1,4 @@
-const { User, Company } = require('../model')
-const { findOne } = require('../model/Company')
+const { User } = require('../model')
 
 const { signToken } = require('../utils/auth')
 
@@ -11,11 +10,6 @@ const userController = {
 
     async getOneUser ({ params }, res) {
         const foundUsers = await User.find({ username: params.username })
-        res.json(foundUsers)
-    },
-
-    async getAllUsersAtCompany ({ params }, res) {
-        const foundUsers = await User.find({ company: params.id })
         res.json(foundUsers)
     },
 

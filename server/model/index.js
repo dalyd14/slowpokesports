@@ -1,7 +1,5 @@
-const Company = require('./Company')
 const User = require('./User');
-const Reader = require('./Reader');
-const Antenna = require('./Antenna');
-const { Tag, TagHistory } = require('./Tag')
+const Player = require('./Player');
+const League = require('./League');
 
-module.exports = { Company, User, Reader, Antenna, Tag, TagHistory }
+module.exports = { User, Player, League }
