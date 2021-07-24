@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
-const { getCurrentSearchDates, getSpecifiedSearchDates, transformToSlowpokeSchedule } = require('../utils')
+const { getCurrentSearchDates, getSpecifiedSearchDates, transformToSlowpokeSchedule } = require('./utils')
 
-const { espn_api_dates_urls, espn_api_schedule_urls } = require('../config')
+const { espn_api_dates_urls, espn_api_schedule_urls } = require('./config')
 
 const { Schedule, Team } = require('../../model');
 
@@ -57,7 +57,7 @@ const callSearchDates = (options) => {
             } else {
                 searchTerms = await getSpecifiedSearchDates(league.url, options.season, options.seasonType)
             }
-            
+
             if (searchTerms && searchTerms.searchType && searchTerms.searchYears && searchTerms.seasonWeeks) {
                 if (!dropped) {
                     dropCollection()
