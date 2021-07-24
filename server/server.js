@@ -15,6 +15,12 @@ if (process.env.NODE_ENV === 'production') {
 const routes = require('./routes');
 app.use(routes);
 
+const getFreshSchedule = require('./services/updateSchedules/espn_schedules_fresh')
+
 db.once('open', () => {
-  app.listen(PORT, () => console.log(`Now listening on ${PORT}`))
+  getFreshSchedule({
+    dropTable: true,
+    current: true
+  })  
+  // app.listen(PORT, () => console.log(`Now listening on ${PORT}`))
 })

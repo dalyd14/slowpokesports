@@ -1,0 +1,1 @@
+This service is responsible for downloading the NFL teams and College FBS teams to the TEams table in the mongoDB database.
