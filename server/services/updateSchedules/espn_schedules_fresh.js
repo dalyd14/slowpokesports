@@ -6,12 +6,16 @@ const { espn_api_dates_urls, espn_api_schedule_urls } = require('./config')
 const { Schedule, Team } = require('../../model');
 
 const dropCollection = () => {
-    try {
-        Schedule.collection.drop()
-        console.log("Schedule collection drop successfull")
-    } catch (e) {
-        console.log("Schedule collection doesn't already exists or there was an error dropping it.")
-    }    
+    return new Promise( async (res, rej) => {
+        try {
+            await Schedule.collection.drop()
+            console.log("Schedule collection drop successfull")
+            res(true)
+        } catch (e) {
+            console.log("Schedule collection doesn't already exists or there was an error dropping it.")
+            rej(false)
+        }            
+    })
 }
 
 const createNewSchedule = async (type, years, league, weeks) => {
@@ -60,8 +64,12 @@ const callSearchDates = (options) => {
 
             if (searchTerms && searchTerms.searchType && searchTerms.searchYears && searchTerms.seasonWeeks) {
                 if (!dropped) {
-                    dropCollection()
-                    dropped = true
+                    const isDropped = await dropCollection()
+                    if (isDropped) {
+                        dropped = true
+                    } else {
+                        return
+                    }
                 }
                 createNewSchedule(searchTerms.searchType, searchTerms.searchYears, league.league, searchTerms.seasonWeeks)
             } else {

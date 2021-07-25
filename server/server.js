@@ -16,8 +16,12 @@ const routes = require('./routes');
 app.use(routes);
 
 const getFreshSchedule = require('./services/updateSchedules/espn_schedules_fresh')
+const getFreshTeams = require('./services/addTeams/espn_teams')
 
 db.once('open', () => {
+  // getFreshTeams({
+  //   dropTable: true
+  // })
   getFreshSchedule({
     dropTable: true,
     current: true
