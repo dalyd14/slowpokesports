@@ -5,20 +5,7 @@ const { espn_api_dates_urls, espn_api_schedule_urls } = require('./config')
 
 const { Schedule, Team } = require('../../model');
 
-const dropCollection = () => {
-    return new Promise( async (res, rej) => {
-        try {
-            await Schedule.collection.drop()
-            console.log("Schedule collection drop successfull")
-            res(true)
-        } catch (e) {
-            console.log("Schedule collection doesn't already exists or there was an error dropping it.")
-            rej(false)
-        }            
-    })
-}
-
-const createNewSchedule = async (type, years, league, weeks) => {
+const callUpdateSchedule = async (type, years, league, weeks, weeksFilter) => {
 
     const teams = await Team.find()
 
@@ -27,7 +14,7 @@ const createNewSchedule = async (type, years, league, weeks) => {
     .then(responses => {
         return Promise.all(responses.map(resp => resp.json()))
     })
-    .then(schedules => {
+    .then( async (schedules) => {
         const games = schedules.map(schedule => {
             return schedule.events.filter(event => {
                 return event.season.year === Math.min(...years) && type.includes(event.season.type)
@@ -36,14 +23,38 @@ const createNewSchedule = async (type, years, league, weeks) => {
 
         const returnSchedule = games.flat(Infinity)
 
-        const readySchedule = returnSchedule.map(event => transformToSlowpokeSchedule(event, teams, league, weeks))
+        let readySchedule = returnSchedule.map(event => transformToSlowpokeSchedule(event, teams, league, weeks))
 
-        return Schedule.insertMany(readySchedule)
-    })
-    .then(result => {
-        if (result) {
-            console.log(`Successfully added ${result.length} record${result.length!==1 ? 's' : ''} from the ${years[0]}-${years[1]} season in the ${league} league.`)
+        if (weeksFilter) {
+            readySchedule = readySchedule.filter(game => weeksFilter.includes(game.week))
         }
+
+        const savedOldGames = await Schedule.find({
+            espn_game_id: {
+                $in: readySchedule.map(game => game.game_id)
+            }            
+        })
+
+        const deletedGames = await Schedule.deleteMany({
+            espn_game_id: {
+                $in: readySchedule.map(game => game.game_id)
+            }            
+        })
+
+        if (deletedGames.ok && deletedGames.n === deletedGames.deletedCount) {
+            console.log(`Successfully deleted ${deletedGames.deletedCount} ${league} record${deletedGames.deletedCount!==1 ? 's' : ''} from the Schedule table`)
+        } else {
+            console.log(`An error occured deleting the necessary ${league} records`)
+        }
+
+        return await Schedule.insertMany(readySchedule, async function(error, docs) {
+            if (error) {
+                await Schedule.insertMany(savedOldGames)
+                console.log(`An error occurred while trying to upload the ${docs.lenght} updated records for ${league}. The old records were re-uploaded.`)
+            } else {
+                console.log(`Successfully updated ${docs.length} record${docs.length!==1 ? 's' : ''}${weeksFilter ? ' for week' + (weeksFilter.length > 1 ? 's ' : ' ') + weeksFilter.join(', ') : ''} from the ${years[0]}-${years[1]} season in the ${league} league.`)
+            }
+        })
     })
     .catch(e => {
         console.log(`Error loading the schedule from the ${years[0]}-${years[1]} season in the ${league} league.\n`, e)
@@ -62,7 +73,7 @@ const callSearchDates = (options) => {
             }
 
             if (searchTerms && searchTerms.searchType && searchTerms.searchYears && searchTerms.seasonWeeks) {
-                createNewSchedule(searchTerms.searchType, searchTerms.searchYears, league.league, searchTerms.seasonWeeks)
+                callUpdateSchedule(searchTerms.searchType, searchTerms.searchYears, league.league, searchTerms.seasonWeeks, options.weeks)
             } else {
                 console.log(searchTerms)
                 console.log("Error: No dates for schedule was found")
@@ -71,14 +82,13 @@ const callSearchDates = (options) => {
     })
 }
 // options object
-//   dropTable: boolean
 //   current: boolean
 //   league: string (either ncaa_fbs or nfl... leave blank for both)
 //   season: int (only relevant if current: false)
 //   seasonType: [int] (only relevant if current: false)
+//   weeks: [int] (leave blank for updating whole season)
 
-const getFreshSchedule = async (options) => {
-    if (typeof options.dropTable === 'undefined') options.dropTable = false
+const updateSchedule = (options) => {
     if (typeof options.current === 'undefined') options.current = true
     if (((typeof options.season === 'undefined') && !options.current) || 
         ((typeof options.season !== 'undefined') && typeof options.season !== 'number')) {
@@ -90,21 +100,14 @@ const getFreshSchedule = async (options) => {
         console.log("Incorrect options. Please specify a season type as an array of integers.")
         return
     }
+    if (((typeof options.weeks === 'undefined') && !options.current) || 
+        ((typeof options.weeks !== 'undefined') && !Array.isArray(options.weeks))) {
+        console.log("Incorrect options. Please specify weeks as an array of integers.")
+        return
+    }
     
     console.log(`Search options:`, options)
-
-    let dropped = !options.dropTable
-
-    if (!dropped) {
-        const isDropped = await dropCollection()
-        if (isDropped) {
-            dropped = true
-        } else {
-            return
-        }
-    }
-
     callSearchDates(options)
 }
 
-module.exports = getFreshSchedule
+module.exports = updateSchedule

@@ -136,7 +136,7 @@ const transformToSlowpokeSchedule = (espnEvent, teams, league, weeks) => {
     const weekNum = getWeekNumber(espnEvent.date, weeks)
 
     const slowpokeEvent = {
-        game_id: espnEvent.uid,
+        espn_game_id: espnEvent.uid,
         league_type: league,
         home_team: homeObjID || home.team.location,
         home_rank: home.curatedRank?.current || 0,

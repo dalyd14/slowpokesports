@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const db = require('./config/connection')
+const db = require('./config/connection');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -15,8 +15,9 @@ if (process.env.NODE_ENV === 'production') {
 const routes = require('./routes');
 app.use(routes);
 
-const getFreshSchedule = require('./services/updateSchedules/espn_schedules_fresh')
 const getFreshTeams = require('./services/addTeams/espn_teams')
+const getFreshSchedule = require('./services/updateSchedules/espn_schedules_fresh')
+const updateSchedule = require('./services/updateSchedules/espn_schedules_update')
 
 db.once('open', () => {
   // getFreshTeams({
@@ -25,6 +26,11 @@ db.once('open', () => {
   getFreshSchedule({
     dropTable: true,
     current: true
-  })  
+  })
+  // updateSchedule({
+  //   current: true,
+  //   league: 'nfl',
+  //   weeks: [1,2,3]
+  // })
   // app.listen(PORT, () => console.log(`Now listening on ${PORT}`))
 })

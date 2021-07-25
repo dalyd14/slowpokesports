@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema;
 
 const ScheduleModelSchema = new Schema({
-    game_id: { type: String, unique: true, required: true },
+    espn_game_id: { type: String, unique: true, required: true },
     league_type: { type: String, required: true, enum: ['nfl', 'ncaa_fbs'] },
     home_team: { type: Schema.Types.Mixed, ref: "Team" },
     home_rank: { type: Number, required: true, default: 0 },
