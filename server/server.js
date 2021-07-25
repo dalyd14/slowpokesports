@@ -23,14 +23,16 @@ db.once('open', () => {
   // getFreshTeams({
   //   dropTable: true
   // })
-  getFreshSchedule({
-    dropTable: true,
-    current: true
-  })
-  // updateSchedule({
-  //   current: true,
-  //   league: 'nfl',
-  //   weeks: [1,2,3]
+  // getFreshSchedule({
+  //   dropTable: false,
+  //   current: false,
+  //   season: 2020,
+  //   seasonType: [2,3]
   // })
+  updateSchedule({
+    current: false,
+    season: 2020,
+    seasonType: [2,3]
+  })
   // app.listen(PORT, () => console.log(`Now listening on ${PORT}`))
 })

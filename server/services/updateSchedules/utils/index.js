@@ -130,7 +130,10 @@ const transformToSlowpokeSchedule = (espnEvent, teams, league, weeks) => {
             favorite
         }
     } else {
-        odds = false
+        odds = {
+            line: 0,
+            favorite: 'not set'
+        }
     }
 
     const weekNum = getWeekNumber(espnEvent.date, weeks)
@@ -147,7 +150,8 @@ const transformToSlowpokeSchedule = (espnEvent, teams, league, weeks) => {
         week: weekNum,
         seasonType: espnEvent.season.type,
         completed: espnEvent.status.type.completed,
-        line: odds,
+        odds: odds,
+        odds_set: false,
         home_score: Number(home.score) || 0,
         away_score: Number(away.score) || 0,
         display_name: espnEvent.shortName

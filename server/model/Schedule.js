@@ -18,6 +18,7 @@ const ScheduleModelSchema = new Schema({
         line: { type: Number },
         favorite: { type: String }
     },
+    odds_set: { type: Boolean, required: true },
     home_score: { type: Number, required: true },
     away_score: { type: Number, required: true },
     display_name: { type: String, required: true }
