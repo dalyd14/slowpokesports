@@ -4,7 +4,7 @@ const { signToken } = require('../utils/auth')
 
 const userController = {
     async getAllUsers (req, res) {
-        const foundUsers = await User.find().select('-password').populate("players")
+        const foundUsers = await User.find().select('-password').populate("leagues", "league_id display_name type")
         res.json(foundUsers)
     },
 
@@ -32,7 +32,6 @@ const userController = {
             })
 
             const user = {
-                _id: newUser._id,
                 email: newUser.email,
                 first_name: newUser.first_name,
                 last_name: newUser.last_name
@@ -82,7 +81,6 @@ const userController = {
         }
 
         const user = {
-            _id: loginUser._id,
             email: loginUser.email,
             first_name: loginUser.first_name,
             last_name: loginUser.last_name

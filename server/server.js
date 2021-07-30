@@ -29,10 +29,10 @@ db.once('open', () => {
   //   season: 2020,
   //   seasonType: [2,3]
   // })
-  updateSchedule({
-    current: false,
-    season: 2020,
-    seasonType: [2,3]
-  })
-  // app.listen(PORT, () => console.log(`Now listening on ${PORT}`))
+  // updateSchedule({
+  //   current: false,
+  //   season: 2020,
+  //   seasonType: [2,3]
+  // })
+  app.listen(PORT, () => console.log(`Now listening on ${PORT}`))
 })

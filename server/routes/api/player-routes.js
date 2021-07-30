@@ -21,6 +21,6 @@ router
 router
     .route('/:email')
     .get(getOneUser)
-    .delete(authMiddleware, deleteUser)
+    .delete(deleteUser)
 
 module.exports = router

@@ -38,7 +38,7 @@ const LeagueModelSchema = new Schema({
     type: { type: String, required:  true },
     owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
     users: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
-    players: [{ type: Schema.Types.ObjectId, ref: "Player", required: true }],
+    players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
     banned_players: [{ type: Schema.Types.ObjectId, ref: "User" }],
     standings: [{ type: StandingsModelSchema, required: false}],
     pick_history: [{ type: PickHistoryModelSchema, required: false}]
