@@ -6,8 +6,8 @@ const PlayerModelSchema = new Schema({
     display_name: { type: String, required: true },
     owner: { type: Boolean, required: true },
     playerOwner: { type: Schema.Types.ObjectId, ref: "User" },
-    collaborative: { type: Boolean, required: true },
     users: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    collaborative: { type: Boolean, required: true },
     league: { type: Schema.Types.ObjectId, ref: "League", required: true },
 });
 

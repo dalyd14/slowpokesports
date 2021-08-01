@@ -4,13 +4,13 @@ const Schema = mongoose.Schema;
 
 const SettingsModelSchema = new Schema({
     leagueSizeLimit: { type: Number, required: true },
-    ncaafbIncluded = { type: Boolean, required: true },
-    ncaafbWeekGameLimit = { type: Number, required: true },
-    planTier = { type: String, required: true },
-    weekStart = { type: Number, required: true },
-    weekEnd = { type: Number, required: true },
-    confidencePoints = { any: Object },
-    tiebreaker = { type: Boolean, required: true }
+    ncaafbIncluded: { type: Boolean, required: true },
+    ncaafbWeekGameLimit: { type: Number, required: true },
+    planTier: { type: String, required: true },
+    weekStart: { type: Number, required: true },
+    weekEnd: { type: Number, required: true },
+    confidencePoints: { any: Object },
+    tiebreaker: { type: Boolean, required: true }
 })
 
 const PickHistoryModelSchema = new Schema({

@@ -128,19 +128,19 @@ const userController = {
                 
                 const foundPlayers = await League.find({ players: { $in: deletePlayers.map(del => del._id) } })
                 foundPlayers.forEach(async ply => {
-                    await League.findByIdAndUpdate(ply.league, { players: { $pull: ply._id } })
+                    await League.findByIdAndUpdate(ply.league, { $pull: { players: ply._id } })
                 })
             }
             
             if (pullPlayers.length) {
                 await Player.updateMany(
                     { _id: { $in: pullPlayers.map(pul => pul._id) } },
-                    { users: { $pull: params._id } }
+                    { $pull: { users: params._id } }
                 )
             }
 
             // Removing From League
-            await League.updateMany({ users: { $in: params._id } }, { users: { $pull: params._id } })
+            await League.updateMany({ users: { $in: params._id } }, { $pull: { users: params._id } })
 
             res.json(deletedUser)         
         } catch (e) {

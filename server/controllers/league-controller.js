@@ -31,23 +31,17 @@ const leagueController = {
                 users: [req.user._id],
                 players: [],
                 banned_players: [],
-                settings: {},
+                settings: body.league.settings,
                 standings: [],
                 pick_history: []
             })
-
-            const playerUsers = await User.find({
-                'email': {
-                    $in: body.player.users
-                }
-            }, '_id')
 
             const newPlayer = await Player.create({
                 display_name: body.player.display_name,
                 owner: true,
                 playerOwner: req.user._id,
+                users: [req.user._id],
                 collaborative: body.player.collaborative,
-                users: playerUsers.map(player => player._id),
                 league: newLeague._id
             })
 

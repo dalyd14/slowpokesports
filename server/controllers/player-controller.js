@@ -19,64 +19,46 @@ const playerController = {
         try {
 
             const foundLeague = await League.findById(body.leagueId)
-                .populate('users')
-                .populate('settings')
+
+            if (!foundLeague) {
+                throw { error_message: 'This league does not exist.' }
+            }
 
             const numOfPlayersAvailable = foundLeague.settings.leagueSizeLimit - foundLeague.players.length
 
             if (numOfPlayersAvailable < 1) {
                 throw { error_message: 'This league has met its maximum allowed player limit.' }
             }
-            
-            const repeatedUsers = []
-            const userEmails = foundLeague.users.map(user => user.email)
-            body.userEmails.forEach(userEmail => {
-                if (userEmails.includes(userEmail)) {
-                    repeatedUsers.push(userEmail)
-                }
-            })
 
-            if (repeatedUsers.length > 0) {
-                throw { error_message: `Some of these users already participate in this league: ${repeatedUsers.join(", ")}`}
+            if (foundLeague.users.includes(user._id)) {
+                throw { error_message: `This user already participates in this league: ${user._id}`}
             }
 
             // All the checks have passed
             // Okay to add player, add player to users, add player and users to league
-            const userByEmail = await User.find({ email: { $in: body.userEmails } })
-          
             const newPlayer = await Player.create({
                 display_name: body.display_name,
                 owner: false,
                 playerOwner: user._id,
+                users: [user._id],
                 collaborative: body.collaborative,
-                users: userByEmail.map(usr => usr._id),
-                league: body.leagueId
-            })
+                league: foundLeague._id
+            })     
 
-            await User.updateMany(
-                { _id: { $in: userByEmail.map(usr => usr._id) } }, 
-                { players: { $push: newPlayer._id } }
+            await User.findByIdAndUpdate(user._id, 
+                { $push: { players: newPlayer._id } }
             )
 
             await League.findByIdAndUpdate(
                 body.leagueId, 
                 {
-                    players: { $push: newPlayer._id },
-                    users: { $push: userByEmail.map(usr => usr._id) }
+                    $push: { players: newPlayer._id, users: user._id }
                 }
             )
 
             res.json(newPlayer)            
         } catch (e) {
-            switch (e.code) {
-                case 11000:
-                    res.status(400).json({ message: 'A user with this email already exists!' })
-                    break;
-                default:
-                    res.status(400).json({ message: `An error occured creating this user`, ...e })
-                    break;
-            }
-            return
+            res.status(400).json({ message: `An error occured creating this player`, ...e })
         }
     },
 
