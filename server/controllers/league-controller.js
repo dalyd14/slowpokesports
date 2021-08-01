@@ -31,6 +31,7 @@ const leagueController = {
                 users: [req.user._id],
                 players: [],
                 banned_players: [],
+                settings: {},
                 standings: [],
                 pick_history: []
             })
@@ -107,7 +108,6 @@ const leagueController = {
             } else {
                 throw { error_message :'Unknown error occurred while deleting league' }
             }
-          
         } catch (e) {
             res.status(400).json({ message: "An error occurred while deleting the league.", ...e })
         }

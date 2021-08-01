@@ -1,0 +1,20 @@
+{
+    "bench_plan": {
+        "player_size_limit": 10,
+        "nfl": true,
+        "ncaafb": false,
+        "ncaafb_week_limit": 0
+    },
+    "pro_plan": {
+        "player_size_limit": 20,
+        "nfl": true,
+        "ncaafb": true,
+        "ncaafb_week_limit": 10
+    },
+    "hof_plan": {
+        "player_size_limit": 50,
+        "nfl": true,
+        "ncaafb": true,
+        "ncaafb_week_limit": "infinite"
+    }
+}

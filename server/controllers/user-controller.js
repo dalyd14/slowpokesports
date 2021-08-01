@@ -1,4 +1,4 @@
-const { User } = require('../model')
+const { User, Player, League } = require('../model')
 
 const { signToken } = require('../utils/auth')
 
@@ -94,19 +94,55 @@ const userController = {
     },
 
     async deleteUser ({ params }, res) {
-
         try {
-            const deletedUser = await User.deleteOne({ email: params.email })
+            // Check for any leagues that this user is an owner for
+            const ownedLeagues = await League.find({ owner: params._id })
+            if (ownedLeagues) {
+                throw { error_message: `You must change ownership or delete all leagues that you are an owner of: ${ownedLeagues.map(leg => leg.display_name).join(", ")}`}
+            }
 
-            if (deletedUser.ok) {
-                if (deletedUser.deletedCount > 0) {
-                    res.json(deletedUser)
+            // Check for any players that this user is an owner for
+            const ownedPlayers = await Player.find({ playerOwner: params._id, 'name.1': {$exists: true} })
+            if (ownedPlayers) {
+                throw { error_message: `You must change ownership or delete all players that you are an owner of: ${ownedPlayers.map(ply => ply.display_name).join(", ")}`}
+            }
+
+            // Deleting User
+            const deletedUser = await User.findByIdAndDelete(params._id)
+
+            // Deleting User From Player
+            const userPlayers = await Player.find({ users: params._id })
+            const deletePlayers = []
+            const pullPlayers = []
+
+            userPlayers.forEach(ply => {
+                if (ply.users.length <= 1) {
+                    deletePlayers.push(ply)
                 } else {
-                    res.status(400).json({message: "No user found or deleted."})
+                    pullPlayers.push(ply)
                 }
-            } else {
-                res.status(400).json({message: "An error occurred while deleting the user."})
-            }            
+            })
+
+            if (deletePlayers.length) {
+                await Player.deleteMany({ _id: { $in: deletePlayers.map(del => del._id) } })
+                
+                const foundPlayers = await League.find({ players: { $in: deletePlayers.map(del => del._id) } })
+                foundPlayers.forEach(async ply => {
+                    await League.findByIdAndUpdate(ply.league, { players: { $pull: ply._id } })
+                })
+            }
+            
+            if (pullPlayers.length) {
+                await Player.updateMany(
+                    { _id: { $in: pullPlayers.map(pul => pul._id) } },
+                    { users: { $pull: params._id } }
+                )
+            }
+
+            // Removing From League
+            await League.updateMany({ users: { $in: params._id } }, { users: { $pull: params._id } })
+
+            res.json(deletedUser)         
         } catch (e) {
             res.status(400).json({ message: "An error occurred while deleting the user.", ...e })
         }

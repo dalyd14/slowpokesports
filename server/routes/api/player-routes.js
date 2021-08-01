@@ -1,26 +1,21 @@
 const router = require('express').Router();
 const {
-    getAllUsers,
-    getOneUser,
-    createNewUser,
-    loginUser,
-    deleteUser
-} = require('../../controllers/user-controller')
+    getAllPlayers,
+    getOnePlayer,
+    createNewPlayer,
+    deletePlayer
+} = require('../../controllers/player-controller')
 
 const { authMiddleware } = require('../../utils/auth')
 
 router
     .route('/')
-    .get(getAllUsers)
-    .post(createNewUser)
+    .get(authMiddleware, getAllPlayers)
+    .post(authMiddleware, createNewPlayer)
 
 router
-    .route('/login')
-    .post(loginUser)
-
-router
-    .route('/:email')
-    .get(getOneUser)
-    .delete(deleteUser)
+    .route('/:_id')
+    .get(authMiddleware, getOnePlayer)
+    .delete(authMiddleware, deletePlayer)
 
 module.exports = router

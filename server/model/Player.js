@@ -8,7 +8,7 @@ const PlayerModelSchema = new Schema({
     playerOwner: { type: Schema.Types.ObjectId, ref: "User" },
     collaborative: { type: Boolean, required: true },
     users: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    league: { type: Schema.Types.ObjectId, ref: "League", unique: true, required: true },
+    league: { type: Schema.Types.ObjectId, ref: "League", required: true },
 });
 
 const Player = mongoose.model("Player", PlayerModelSchema, "Player")
