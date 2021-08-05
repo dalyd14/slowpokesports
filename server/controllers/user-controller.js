@@ -93,56 +93,66 @@ const userController = {
         res.json({user, token})
     },
 
-    async deleteUser ({ params }, res) {
+    async deleteUser ({ params, user }, res) {
         try {
+
+            // Check to see if this user is even who they are trying to delete
+            if (params._id != user._id) {
+                throw { error_message: `You do not have permissions to delete this user!`}
+            }
+
             // Check for any leagues that this user is an owner for
             const ownedLeagues = await League.find({ owner: params._id })
-            if (ownedLeagues) {
+            if (ownedLeagues.length) {
                 throw { error_message: `You must change ownership or delete all leagues that you are an owner of: ${ownedLeagues.map(leg => leg.display_name).join(", ")}`}
             }
 
             // Check for any players that this user is an owner for
-            const ownedPlayers = await Player.find({ playerOwner: params._id, 'name.1': {$exists: true} })
-            if (ownedPlayers) {
+            const ownedPlayers = await Player.find({ playerOwner: params._id, 'users.1': {$exists: true} })
+            if (ownedPlayers.length) {
                 throw { error_message: `You must change ownership or delete all players that you are an owner of: ${ownedPlayers.map(ply => ply.display_name).join(", ")}`}
             }
 
             // Deleting User
-            const deletedUser = await User.findByIdAndDelete(params._id)
+            // const deletedUser = await User.findByIdAndDelete(params._id)
 
             // Deleting User From Player
+            // Finding all the players associated with this user
             const userPlayers = await Player.find({ users: params._id })
             const deletePlayers = []
             const pullPlayers = []
 
             userPlayers.forEach(ply => {
+                // if there is only one user in this player you can delete the player
                 if (ply.users.length <= 1) {
                     deletePlayers.push(ply)
+                // if there are more than one user in this player, just pull the user from the player
                 } else {
                     pullPlayers.push(ply)
                 }
             })
 
             if (deletePlayers.length) {
+                // Outright delete player because this user is the only user
                 await Player.deleteMany({ _id: { $in: deletePlayers.map(del => del._id) } })
-                
-                const foundPlayers = await League.find({ players: { $in: deletePlayers.map(del => del._id) } })
-                foundPlayers.forEach(async ply => {
+                // then pull this player from the league it was associated with
+                deletePlayers.forEach(async ply => {
                     await League.findByIdAndUpdate(ply.league, { $pull: { players: ply._id } })
                 })
             }
             
             if (pullPlayers.length) {
+                // Simply pull this user from the player because there are still other users associated with this player
                 await Player.updateMany(
                     { _id: { $in: pullPlayers.map(pul => pul._id) } },
                     { $pull: { users: params._id } }
                 )
             }
 
-            // Removing From League
+            // Removing User From League
             await League.updateMany({ users: { $in: params._id } }, { $pull: { users: params._id } })
 
-            res.json(deletedUser)         
+            res.json(deletedUser)
         } catch (e) {
             res.status(400).json({ message: "An error occurred while deleting the user.", ...e })
         }

@@ -19,7 +19,7 @@ router
     .post(loginUser)
 
 router
-    .route('/:email')
+    .route('/:_id')
     .get(getOneUser)
     .delete(authMiddleware, deleteUser)
 

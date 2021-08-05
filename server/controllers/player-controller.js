@@ -62,29 +62,42 @@ const playerController = {
         }
     },
 
-    async deletePlayer ({ params }, res) {
+    async deletePlayer ({ params, user }, res) {
         try {
+
+            const findPlayer = await Player.findById(params._id)
+            if (!findPlayer) {
+                throw { error_message: 'This player does not exist' }
+            } else if (findPlayer.playerOwner != user._id) {
+                throw { error_message: 'Only the player owner can delete the player' }
+            }
+
             const deletedPlayer = await Player.findByIdAndDelete(params._id)
 
-            Promise.all([
+            Promise.all(
                 deletedPlayer.users.map(usr => 
                     User.findByIdAndUpdate(
                         usr._id, 
                         { $pull: { players: params._id } }
                     )
-                ),
-                deletedPlayer.users.map(usr => 
-                    League.findByIdAndUpdate(
-                        usr._id,
-                        { $pull: { players: params._id, users: usr._id } }
+                )
+            ).then(resp => {
+                return Promise.all(
+                    deletedPlayer.users.map(usr => 
+                        League.findByIdAndUpdate(
+                            deletedPlayer.league,
+                            { $pull: { players: params._id, users: usr._id } }
+                        )
                     )
                 )
-            ])
+            })
+            .then(resp => {
+                res.json(deletedPlayer) 
+            })
             .catch(e => {
                 res.status(400).json({ message: "An error occurred while removing the player and user ids" })
             })
-
-            res.json(deletedPlayer)       
+                  
         } catch (e) {
             res.status(400).json({ message: "An error occurred while deleting the user.", ...e })
         }
