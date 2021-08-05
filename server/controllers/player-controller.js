@@ -1,3 +1,5 @@
+const { v4: uuidv4 } = require('uuid')
+
 const { Player, League, User } = require('../model')
 
 const playerController = {
@@ -99,7 +101,128 @@ const playerController = {
             })
                   
         } catch (e) {
-            res.status(400).json({ message: "An error occurred while deleting the user.", ...e })
+            res.status(400).json({ message: "An error occurred while deleting the player.", ...e })
+        }
+    },
+
+    async changeCollaborative ({ params, body, user }, res) {
+        try {
+            const findPlayer = await Player.findById(params._id)
+            if (!findPlayer) {
+                throw { error_message: 'This player does not exist' }
+            } else if (findPlayer.playerOwner != user._id) {
+                throw { error_message: 'Only the player owner can edit the player' }
+            }
+            
+            let updatePlayer
+            
+            if (body.collaborative) {
+                // The playerOwner has made this player open to collaboration
+                const inviteToken = uuidv4()
+                updatePlayer = await Player.findByIdAndUpdate(params._id, { collaborative: body.collaborative, inviteToken: inviteToken }, { new: true })
+            } else {
+                updatePlayer = await Player.findByIdAndUpdate(params._id, { collaborative: body.collaborative, inviteToken: '' }, { new: true })
+            }
+
+            res.json(updatePlayer)
+
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while changing the collaboration of the player.", ...e })
+        }
+    },
+
+    async joinPlayer ({ params, user }, res) {
+        try {
+            // check to see if invite token was provided
+            if (!params.inviteToken) {
+                throw { error_message: 'Please provide a proper invite token for a player.' }
+            }
+
+            // Check to see if there was even a player found with this invite token
+            // Check to see if this user is already a member of the player
+            // check to see if the player is still collaborative
+            const findPlayer = await Player.findOne({ inviteToken: params.inviteToken })
+            if (!findPlayer) {
+                throw { error_message: 'This invite token is not tied to any player.' }
+            } else if (findPlayer.users.includes(user._id)) {
+                throw { error_message: 'You are already a member of this player!' }
+            } else if (!findPlayer.collaborative) {
+                throw { error_message: 'An error occurred, this player is not open for collaboration.' }
+            }
+
+            // Finally check if this user is already a part of the league this player participates in
+            const foundLeague = await League.findById(findPlayer.league)
+            if (foundLeague.users.includes(user._id)) {
+                throw { error_message: 'This user is already a part of the league that this player participates in. The same user cannot have more than one player in the same league.' }
+            }
+
+            // if all the above checks pass, add the user to the player
+            const updatePlayer = await Player.findOneAndUpdate({ inviteToken: params.inviteToken }, { $push: { users: user._id } }, { new: true })
+            
+            // then add the user to the league this player is a part of
+            await League.findByIdAndUpdate(findPlayer.league, { $push: { users: user._id } })
+
+            // finally add player to this user
+            await User.findByIdAndUpdate(user._id, { $push: { players: findPlayer._id } })
+
+            res.json(updatePlayer)
+
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while trying to join this player.", ...e })
+        }
+    },
+
+    async switchPlayerOwner ({ params, body, user }) {
+        try {
+            const findPlayer = await Player.findById(params._id)
+            if (!findPlayer) {
+                throw { error_message: 'This player does not exist' }
+            } else if (findPlayer.playerOwner != user._id) {
+                throw { error_message: 'Only the player owner can edit the player' }
+            }
+
+            // check if the user that the owner wants to switch to exists in the player
+            if (!findPlayer.users.includes(body.newOwner)) {
+                throw { error_message: 'The intended new owner does not exist in the player.' }
+            }
+
+            // if all checks above pass then change the playerOwner
+            const updatePlayer = await Player.findByIdAndUpdate(params._id, { playerOwner: body.newOwner })
+
+            res.json(updatePlayer)
+
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while trying to switch the player owner.", ...e })
+        }
+    },
+
+    async generalUpdatePlayer ({ params, body, user }) {
+        try {
+            const findPlayer = await Player.findById(params._id)
+            if (!findPlayer) {
+                throw { error_message: 'This player does not exist' }
+            } else if (findPlayer.playerOwner != user._id) {
+                throw { error_message: 'Only the player owner can edit the player' }
+            }
+
+            // only fields that can be updated
+            // display_name
+            const acceptedFields = ['display_name']
+
+            // remove any key-value pairs that are empty
+            for (key in body) {
+                if (!acceptedFields.includes(key) || !body[key]) {
+                    delete body[key]
+                }
+            }
+
+            // if all checks above pass then change the playerOwner
+            const updatePlayer = await Player.findByIdAndUpdate(params._id, body)
+
+            res.json(updatePlayer)
+
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while trying to switch the player owner.", ...e })
         }
     }
 }
