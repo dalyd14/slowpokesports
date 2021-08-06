@@ -7,7 +7,8 @@ const {
     changeCollaborative,
     joinPlayer,
     switchPlayerOwner,
-    generalUpdatePlayer
+    generalUpdatePlayer,
+    kickOutUser
 } = require('../../controllers/player-controller')
 
 const { authMiddleware } = require('../../utils/auth')
@@ -32,6 +33,10 @@ router
 router
     .route('/switchOwner/:_id')
     .put(authMiddleware, generalUpdatePlayer)
+
+router
+    .route('/kickOutUser/:_id')
+    .put(authMiddleware, kickOutUser)
 
 router
     .route('/:_id')

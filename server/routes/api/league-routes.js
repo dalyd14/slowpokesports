@@ -3,7 +3,8 @@ const {
     getAllLeagues,
     getOneLeague,
     createNewLeague,
-    deleteLeague
+    deleteLeague,
+    kickOutPlayer
 } = require('../../controllers/league-controller')
 
 const { authMiddleware } = require('../../utils/auth')
@@ -14,7 +15,10 @@ router
     .post(authMiddleware, createNewLeague)
 
 router
-    .route('/:league_id')
+    .route('kickOutPlayer/:_id')
+
+router
+    .route('/:_id')
     .get(authMiddleware, getOneLeague)
     .delete(authMiddleware, deleteLeague)
 

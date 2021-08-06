@@ -224,6 +224,32 @@ const playerController = {
         } catch (e) {
             res.status(400).json({ message: "An error occurred while trying to switch the player owner.", ...e })
         }
+    },
+
+    async kickOutUser ({ params, body, user }) {
+        try {
+
+            const findPlayer = await Player.findById(params._id)
+            if (!findPlayer) {
+                throw { error_message: 'This player does not exist' }
+            } else if (findPlayer.playerOwner != user._id) {
+                throw { error_message: 'Only the player owner can remove users from the player' }
+            } else if (!findPlayer.users.includes(body.removeUser)) {
+                throw { error_message: 'This user does not exist for this player' }
+            }
+
+            const updatedPlayer = await Player.findByIdAndUpdate(params._id, { $pull: { users: body.removeUser } })
+
+            await User.findByIdAndUpdate(body.removeUser, { $pull: { players: params._id } })
+
+            await League.findByIdAndUpdate(findPlayer.league, { $pull: { users: body.removeUser } })
+
+
+            res.json(updatedPlayer) 
+                  
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while removing the user from the player.", ...e })
+        }
     }
 }
 

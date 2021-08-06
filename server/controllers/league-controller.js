@@ -7,28 +7,29 @@ const leagueController = {
     },
 
     async getOneLeague ({ params }, res) {
-        const foundLeague = await League.find({ league_id: params.league_id })
-            .populate(
-                {
-                    path: 'players',			
-                    populate: { 
-                        path:  'league'
-                    }
-                }
-            )
-        res.json(foundLeague)
+        try {
+            const foundLeague = await League.findById(params._id).populate('players')
+
+            if (!foundLeague) {
+                throw { error_message: "This league does not exist." }
+            }
+
+            res.json(foundLeague)
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while finding the league.", ...e })
+        }
+
     },
 
-    async createNewLeague (req, res) {
-        try {
-            const { body } = req
+    async createNewLeague ({ body, user }, res) {
+        try {     
             const newLeague = await League.create({
                 league_id: body.league.league_id,
                 signup_key: body.league.signup_key,
                 display_name: body.league.display_name,
                 type: body.league.type,
-                owner: req.user._id,
-                users: [req.user._id],
+                owner: user._id,
+                users: [user._id],
                 players: [],
                 banned_players: [],
                 settings: body.league.settings,
@@ -39,8 +40,8 @@ const leagueController = {
             const newPlayer = await Player.create({
                 display_name: body.player.display_name,
                 owner: true,
-                playerOwner: req.user._id,
-                users: [req.user._id],
+                playerOwner: user._id,
+                users: [user._id],
                 collaborative: body.player.collaborative,
                 league: newLeague._id
             })
@@ -49,7 +50,7 @@ const leagueController = {
                 { $push: { players: newPlayer._id } }
             )
 
-            await User.findByIdAndUpdate(req.user._id, 
+            await User.findByIdAndUpdate(user._id, 
                 { $push: { players: newPlayer._id } }
             )
 
@@ -62,13 +63,12 @@ const leagueController = {
     async deleteLeague ({ params, user }, res) {
 
         try {
-            const foundLeague = await League.findOne({ league_id: params.league_id }).select("_id owner players")
+            const foundLeague = await League.findById(params._id).select("_id owner players")
 
             if (!foundLeague) {
                 throw { error_message :'This league could not be found!' }
             }
             else if (foundLeague.owner != user._id) {
-                console.log(foundLeague.owner, user._id)
                 throw { error_message :'You do not have the proper permissions to perform this operation.' }
             } 
             else if (foundLeague.owner == user._id) {
@@ -93,7 +93,7 @@ const leagueController = {
                     { $pull: { players: player } })
                 }))
                 .then(result => {
-                    res.status(400).json({ success: 'League successfully deleted' })
+                    res.json({ success: 'League successfully deleted' })
                 })
                 .catch(e => {
                     res.status(400).json({ error: 'An error occured while deleting this league.' })
@@ -105,6 +105,43 @@ const leagueController = {
         } catch (e) {
             res.status(400).json({ message: "An error occurred while deleting the league.", ...e })
         }
+    },
+
+    async kickOutPlayer ({ params, body, user }) {
+   
+        try {
+            const foundLeague = await League.findOne({ league_id: params.league_id }).select("_id owner players").populate("players")
+
+            if (!foundLeague) {
+                throw { error_message :'This league could not be found!' }
+            } else if (foundLeague.owner != user._id) {
+                throw { error_message :'You do not have the proper permissions to perform this operation.' }
+            } else if (!foundLeague.players.includes(body.removePlayer)) {
+                throw { error_message :'This player does not participate in this league.' }
+            }
+
+            const playerUserIds = foundLeague.players
+                .findOne(player => player._id == body.removePlayer).users
+                .map(user => user._id)
+
+            if (playerUserIds.includes(user._id)) {
+                throw { error_message :'League owners cannot remove themselves from their league. Change ownership and then you can leave.' }
+            }
+
+            // remove player and users from the league
+            const updatedLeague = await League.findByIdAndUpdate(params._id, { $pull: { players: body.removePlayer, users: { $in: playerUserIds } } })
+
+            // delete player
+            await Player.findByIdAndDelete(body.removePlayer)
+
+            // remove players from the users
+            await User.updateMany({ _id: { $in: playerUserIds } }, { $pull: { players: params._id } })
+
+            res.json(updatedLeague)
+
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while deleting the league.", ...e })
+        }     
     }
 }
 
