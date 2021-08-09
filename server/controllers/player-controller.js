@@ -300,7 +300,7 @@ const playerController = {
             })
                   
         } catch (e) {
-            res.status(400).json({ message: "An error occurred while removing the user from the player.", ...e })
+            res.status(400).json({ message: "An error occurred while removing the player from the league.", ...e })
         }
     }
 }

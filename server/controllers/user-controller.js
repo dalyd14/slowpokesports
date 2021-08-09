@@ -156,6 +156,36 @@ const userController = {
         } catch (e) {
             res.status(400).json({ message: "An error occurred while deleting the user.", ...e })
         }
+    }, 
+
+    async leavePlayer ({ params, user }, res) {
+        try {
+            const foundPlayer = await Player.findById(params.playerId)
+            const foundUser = await User.findById(user._id)
+            const foundLeague = await League.findById(foundPlayer.league)
+            
+            if (!foundPlayer) {
+                throw { error_message: 'This player does not exist' }
+            } else if (foundPlayer.playerOwner != user._id) {
+                throw { error_message: 'You cannot leave the player if you are the owner of the player. Either change ownership and then leave, or delete the player.' }
+            }
+
+            if (!foundUser) {
+                throw { error_message: 'This user does not exist' }
+            } else if (!foundPlayer.users.includes(user._id)) {
+                throw { error_message: 'This user is not a part of this player.' }
+            } else if (foundLeague.owner === user._id) {
+                throw { error_message: 'This user is the owner of the league that they are trying to leave. Please change ownership of the league.' }
+            }
+            
+            await Player.findByIdAndUpdate(params.playerId, { $pull: { users: user._id } })
+            await League.findByIdAndUpdate(foundPlayer.league, { $pull: { users: user._id } })
+            const updatedUser = await User.findByIdAndUpdate(user._id, { $pull: { players: params.playerId } })
+
+            res.json(updatedUser)            
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while removing the user from the player.", ...e })
+        }
     }
 }
 

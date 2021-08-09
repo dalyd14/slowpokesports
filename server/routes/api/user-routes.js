@@ -4,7 +4,8 @@ const {
     getOneUser,
     createNewUser,
     loginUser,
-    deleteUser
+    deleteUser,
+    leavePlayer
 } = require('../../controllers/user-controller')
 
 const { authMiddleware } = require('../../utils/auth')
@@ -17,6 +18,10 @@ router
 router
     .route('/login')
     .post(loginUser)
+
+router
+    .route('/leavePlayer/:playerId')
+    .post(authMiddleware, leavePlayer)
 
 router
     .route('/:_id')
