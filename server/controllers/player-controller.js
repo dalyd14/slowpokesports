@@ -16,54 +16,6 @@ const playerController = {
         res.json(foundPlayers)
     },
 
-    // this createNewPlayer is only reached when joining an already established league
-    async createNewPlayer ({ body, user }, res) {
-        try {
-
-            const foundLeague = await League.findById(body.leagueId)
-
-            if (!foundLeague) {
-                throw { error_message: 'This league does not exist.' }
-            }
-
-            const numOfPlayersAvailable = foundLeague.settings.leagueSizeLimit - foundLeague.players.length
-
-            if (numOfPlayersAvailable < 1) {
-                throw { error_message: 'This league has met its maximum allowed player limit.' }
-            }
-
-            if (foundLeague.users.includes(user._id)) {
-                throw { error_message: `This user already participates in this league: ${user._id}`}
-            }
-
-            // All the checks have passed
-            // Okay to add player, add player to users, add player and users to league
-            const newPlayer = await Player.create({
-                display_name: body.display_name,
-                owner: false,
-                playerOwner: user._id,
-                users: [user._id],
-                collaborative: body.collaborative,
-                league: foundLeague._id
-            })     
-
-            await User.findByIdAndUpdate(user._id, 
-                { $push: { players: newPlayer._id } }
-            )
-
-            await League.findByIdAndUpdate(
-                body.leagueId, 
-                {
-                    $push: { players: newPlayer._id, users: user._id }
-                }
-            )
-
-            res.json(newPlayer)            
-        } catch (e) {
-            res.status(400).json({ message: `An error occured creating this player`, ...e })
-        }
-    },
-
     async deletePlayer ({ params, user }, res) {
         try {
 
@@ -121,7 +73,7 @@ const playerController = {
                 const inviteToken = uuidv4()
                 updatePlayer = await Player.findByIdAndUpdate(params._id, { collaborative: body.collaborative, inviteToken: inviteToken }, { new: true })
             } else {
-                updatePlayer = await Player.findByIdAndUpdate(params._id, { collaborative: body.collaborative, inviteToken: '' }, { new: true })
+                updatePlayer = await Player.findByIdAndUpdate(params._id, { collaborative: false, inviteToken: '' }, { new: true })
             }
 
             res.json(updatePlayer)
@@ -222,7 +174,7 @@ const playerController = {
             res.json(updatePlayer)
 
         } catch (e) {
-            res.status(400).json({ message: "An error occurred while trying to switch the player owner.", ...e })
+            res.status(400).json({ message: "An error occurred while trying to update the player.", ...e })
         }
     },
 

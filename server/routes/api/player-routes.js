@@ -2,7 +2,6 @@ const router = require('express').Router();
 const {
     getAllPlayers,
     getOnePlayer,
-    createNewPlayer,
     deletePlayer,
     changeCollaborative,
     joinPlayer,
@@ -17,7 +16,6 @@ const { authMiddleware } = require('../../utils/auth')
 router
     .route('/')
     .get(authMiddleware, getAllPlayers)
-    .post(authMiddleware, createNewPlayer)
 
 router
     .route('/collaborate/:_id')
@@ -28,11 +26,11 @@ router
     .post(authMiddleware, joinPlayer)
 
 router
-    .route('/update/:_id')
+    .route('/switchOwner/:_id')
     .put(authMiddleware, switchPlayerOwner)
 
 router
-    .route('/switchOwner/:_id')
+    .route('/update/:_id')
     .put(authMiddleware, generalUpdatePlayer)
 
 router

@@ -50,7 +50,7 @@ const LeagueModelSchema = new Schema({
     owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
     users: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
     players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
-    banned_players: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    open_league: { type: Boolean, required: true },
     settings: { type: SettingsModelSchema, required: true },
     standings: [{ type: StandingsModelSchema, required: false}],
     pick_history: [{ type: PickHistoryModelSchema, required: false}]

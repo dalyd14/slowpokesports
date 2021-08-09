@@ -42,7 +42,7 @@ const leagueController = {
                 owner: true,
                 playerOwner: user._id,
                 users: [user._id],
-                collaborative: body.player.collaborative,
+                collaborative: false,
                 league: newLeague._id
             })
 
@@ -142,7 +142,140 @@ const leagueController = {
         } catch (e) {
             res.status(400).json({ message: "An error occurred while deleting the league.", ...e })
         }     
-    }
+    },
+
+    async changeOpenLeague ({ params, body, user }, res) {
+        try {
+            const findLeague = await League.findById(params._id)
+            if (!findLeague) {
+                throw { error_message: 'This league does not exist' }
+            } else if (findLeague.owner != user._id) {
+                throw { error_message: 'Only the league owner can edit the league' }
+            }
+            
+            let updateLeague
+            
+            if (body.open_league) {
+                // The owner has made this league open to join
+                updateLeague = await League.findByIdAndUpdate(params._id, { open_league: body.open_league }, { new: true })
+            } else {
+                updateLeague = await League.findByIdAndUpdate(params._id, { open_league: false }, { new: true })
+            }
+
+            res.json(updateLeague)
+
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while changing the open status of the league.", ...e })
+        }
+    },
+
+    async joinLeague ({ params, body, user }, res) {
+        try {
+            // check to see if invite token was provided
+            if (!body.signUpKey) {
+                throw { error_message: 'Please provide a proper sign up key for this league.' }
+            }
+
+            const findLeague = await League.findById(params._id)
+
+            if (!findLeague) {
+                throw { error_message: 'This league does not exist.' }
+            } else if (findLeague.users.includes(user._id)) {
+                throw { error_message: 'You are already a member of this league!' }
+            } else if (!findLeague.open_league) {
+                throw { error_message: 'This league is not open for joining.' }
+            }
+
+            const numOfPlayersAvailable = findLeague.settings.leagueSizeLimit - findLeague.players.length
+
+            if (numOfPlayersAvailable < 1) {
+                throw { error_message: 'This league has met its maximum allowed player limit.' }
+            }
+
+            if (findLeague.signup_key !== body.signUpKey) {
+                throw { error_message: 'The signup key you provided does not match this league.' }
+            }
+
+            const newPlayer = await Player.create({
+                display_name: body.display_name,
+                owner: false,
+                playerOwner: user._id,
+                users: [user._id],
+                collaborative: false,
+                league: findLeague._id
+            })     
+
+            await User.findByIdAndUpdate(user._id, 
+                { $push: { players: newPlayer._id } }
+            )
+
+            await League.findByIdAndUpdate(
+                body.leagueId, 
+                {
+                    $push: { players: newPlayer._id, users: user._id }
+                }
+            )
+
+            res.json({league: findLeague, player: newPlayer})
+
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while trying to join this league.", ...e })
+        }
+    },
+
+    async switchLeagueOwner ({ params, body, user }) {
+        try {
+            const findLeague = await League.findById(params._id)
+            if (!findLeague) {
+                throw { error_message: 'This league does not exist' }
+            } else if (findLeague.owner != user._id) {
+                throw { error_message: 'Only the league owner can edit the league' }
+            }
+
+            // check if the user that the owner wants to switch to exists in the league
+            if (!findLeague.users.includes(body.newOwner)) {
+                throw { error_message: 'The intended new owner does not exist in the league.' }
+            }
+
+            // if all checks above pass then change the owner
+            const updateLeague = await League.findByIdAndUpdate(params._id, { owner: body.newOwner })
+
+            res.json(updateLeague)
+
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while trying to switch the league owner.", ...e })
+        }
+    },
+
+    async generalUpdateLeague ({ params, body, user }) {
+        try {
+            const findLeague = await League.findById(params._id)
+            if (!findLeague) {
+                throw { error_message: 'This league does not exist' }
+            } else if (findLeague.owner != user._id) {
+                throw { error_message: 'Only the league owner can edit the league' }
+            }
+
+            // only fields that can be updated
+            // display_name
+            const acceptedFields = ['signup_key', 'display_name']
+
+            // remove any key-value pairs that are empty
+            for (key in body) {
+                if (!acceptedFields.includes(key) || !body[key]) {
+                    delete body[key]
+                }
+            }
+
+            // if all checks above pass then change the playerOwner
+            const updateLeague = await League.findByIdAndUpdate(params._id, body)
+
+            res.json(updateLeague)
+
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while trying to update the league.", ...e })
+        }
+    },
 }
 
 module.exports = leagueController
