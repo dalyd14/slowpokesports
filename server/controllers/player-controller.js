@@ -236,6 +236,8 @@ const playerController = {
                 throw { error_message: 'Only the player owner can remove users from the player' }
             } else if (!findPlayer.users.includes(body.removeUser)) {
                 throw { error_message: 'This user does not exist for this player' }
+            } else if (body.removeUser != user._id) {
+                throw { error_message: 'You cannot remove yourself from the player. Change ownership and then leave the player.'}
             }
 
             const updatedPlayer = await Player.findByIdAndUpdate(params._id, { $pull: { users: body.removeUser } })
@@ -246,6 +248,56 @@ const playerController = {
 
 
             res.json(updatedPlayer) 
+                  
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while removing the user from the player.", ...e })
+        }
+    },
+
+    async leaveLeague ({ params, body, user }) {
+        try {
+            const findPlayer = await Player.findById(params._id)
+            const findLeague = await League.findById(body.leaveLeague)
+
+            if (!findPlayer) {
+                throw { error_message: 'This player does not exist' }
+            } else if (findPlayer.playerOwner != user._id) {
+                throw { error_message: 'Only the player owner can remove player from league' }
+            }
+
+            if (!findLeague) {
+                throw { error_message: 'This league does not exist' }
+            } else if (findPlayer.league != body.leaveLeague) {
+                throw { error_message: 'This player does not participate in the league you want to leave.' }
+            } else if (!findPlayer.users.includes(findLeague.owner)) {
+                throw { error_message: 'This player cannot leave the league because the owner of the league is part of this player.' }
+            }
+
+            const deletedPlayer = await Player.findByIdAndDelete(params._id)
+
+            Promise.all(
+                deletedPlayer.users.map(usr => 
+                    User.findByIdAndUpdate(
+                        usr._id, 
+                        { $pull: { players: params._id } }
+                    )
+                )
+            ).then(resp => {
+                return Promise.all(
+                    deletedPlayer.users.map(usr => 
+                        League.findByIdAndUpdate(
+                            body.leaveLeague,
+                            { $pull: { players: params._id, users: usr._id } }
+                        )
+                    )
+                )
+            })
+            .then(resp => {
+                res.json(deletedPlayer) 
+            })
+            .catch(e => {
+                res.status(400).json({ message: "An error occurred while removing the player and user ids" })
+            })
                   
         } catch (e) {
             res.status(400).json({ message: "An error occurred while removing the user from the player.", ...e })

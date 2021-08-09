@@ -8,7 +8,8 @@ const {
     joinPlayer,
     switchPlayerOwner,
     generalUpdatePlayer,
-    kickOutUser
+    kickOutUser,
+    leaveLeague
 } = require('../../controllers/player-controller')
 
 const { authMiddleware } = require('../../utils/auth')
@@ -24,7 +25,7 @@ router
 
 router
     .route('/join/:inviteToken')
-    .put(authMiddleware, joinPlayer)
+    .post(authMiddleware, joinPlayer)
 
 router
     .route('/update/:_id')
@@ -36,7 +37,11 @@ router
 
 router
     .route('/kickOutUser/:_id')
-    .put(authMiddleware, kickOutUser)
+    .post(authMiddleware, kickOutUser)
+
+router
+    .route('/leaveLeague/:_id')
+    .post(authMiddleware, leaveLeague)
 
 router
     .route('/:_id')
