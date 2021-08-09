@@ -31,10 +31,9 @@ const leagueController = {
                 owner: user._id,
                 users: [user._id],
                 players: [],
-                banned_players: [],
                 settings: body.league.settings,
                 standings: [],
-                pick_history: []
+                schedule: []
             })
 
             const newPlayer = await Player.create({
