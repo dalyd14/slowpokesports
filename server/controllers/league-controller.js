@@ -1,3 +1,5 @@
+const { v4: uuidv4 } = require('uuid')
+
 const { League, Player, User } = require('../model')
 
 const leagueController = {
@@ -22,23 +24,26 @@ const leagueController = {
     },
 
     async createNewLeague ({ body, user }, res) {
-        try {     
+        try {
+            const Settings = require(`../data/leagues/settings/config`)[body.league.type]
+
+            const leagueSettings = Settings(body.league.settings)
+            
             const newLeague = await League.create({
                 league_id: body.league.league_id,
-                signup_key: body.league.signup_key,
                 display_name: body.league.display_name,
                 type: body.league.type,
                 owner: user._id,
                 users: [user._id],
                 players: [],
-                settings: body.league.settings,
+                open_league: body.league.open_league || false,
+                settings: leagueSettings.getSettings(),
                 standings: [],
                 schedule: []
             })
 
             const newPlayer = await Player.create({
                 display_name: body.player.display_name,
-                owner: true,
                 playerOwner: user._id,
                 users: [user._id],
                 collaborative: false,
@@ -106,7 +111,7 @@ const leagueController = {
         }
     },
 
-    async kickOutPlayer ({ params, body, user }) {
+    async kickOutPlayer ({ params, body, user }, res) {
    
         try {
             const foundLeague = await League.findOne({ league_id: params.league_id }).select("_id owner players").populate("players")
@@ -156,9 +161,10 @@ const leagueController = {
             
             if (body.open_league) {
                 // The owner has made this league open to join
-                updateLeague = await League.findByIdAndUpdate(params._id, { open_league: body.open_league }, { new: true })
+                const inviteToken = uuidv4()
+                updateLeague = await League.findByIdAndUpdate(params._id, { open_league: body.open_league, inviteToken: inviteToken }, { new: true })
             } else {
-                updateLeague = await League.findByIdAndUpdate(params._id, { open_league: false }, { new: true })
+                updateLeague = await League.findByIdAndUpdate(params._id, { open_league: false, inviteToken: '' }, { new: true })
             }
 
             res.json(updateLeague)
@@ -171,14 +177,19 @@ const leagueController = {
     async joinLeague ({ params, body, user }, res) {
         try {
             // check to see if invite token was provided
-            if (!body.signUpKey) {
-                throw { error_message: 'Please provide a proper sign up key for this league.' }
+            if (!params.inviteToken) {
+                throw { error_message: 'Please provide a proper invite token for a league.' }
             }
 
-            const findLeague = await League.findById(params._id)
+            // Check to see if there was even a league found with this invite token
+            // Check to see if this user is already a member of the league
+            // Check to see if the league is still collaborative
+            // Check to see if the league has any vacancy
+
+            const findLeague = await League.findById({ inviteToken: params.inviteToken })
 
             if (!findLeague) {
-                throw { error_message: 'This league does not exist.' }
+                throw { error_message: 'This invite token is not tied to any league.' }
             } else if (findLeague.users.includes(user._id)) {
                 throw { error_message: 'You are already a member of this league!' }
             } else if (!findLeague.open_league) {
@@ -191,13 +202,8 @@ const leagueController = {
                 throw { error_message: 'This league has met its maximum allowed player limit.' }
             }
 
-            if (findLeague.signup_key !== body.signUpKey) {
-                throw { error_message: 'The signup key you provided does not match this league.' }
-            }
-
             const newPlayer = await Player.create({
                 display_name: body.display_name,
-                owner: false,
                 playerOwner: user._id,
                 users: [user._id],
                 collaborative: false,
@@ -222,7 +228,7 @@ const leagueController = {
         }
     },
 
-    async switchLeagueOwner ({ params, body, user }) {
+    async switchLeagueOwner ({ params, body, user }, res) {
         try {
             const findLeague = await League.findById(params._id)
             if (!findLeague) {
@@ -246,7 +252,7 @@ const leagueController = {
         }
     },
 
-    async generalUpdateLeague ({ params, body, user }) {
+    async generalUpdateLeague ({ params, body, user }, res) {
         try {
             const findLeague = await League.findById(params._id)
             if (!findLeague) {
@@ -275,6 +281,26 @@ const leagueController = {
             res.status(400).json({ message: "An error occurred while trying to update the league.", ...e })
         }
     },
+
+    async getLeagueSettings ({ params, body, user }, res) {
+        const findLeague = await League.findById(params._id)
+
+        const Settings = require(`../data/leagues/settings/config`)[body.leagueType]
+        
+        const leagueSettings = Settings(findLeague.settings)
+
+        res.json(leagueSettings.getSettings())
+    },
+
+    async getLeagueSettingsFields ({ params, body, user }, res) {
+        const findLeague = await League.findById(params._id)
+
+        const Settings = require(`../data/leagues/settings/config`)[body.leagueType]
+
+        const leagueSettings = Settings(findLeague.settings)
+
+        res.json(leagueSettings.getFields())
+    }
 }
 
 module.exports = leagueController

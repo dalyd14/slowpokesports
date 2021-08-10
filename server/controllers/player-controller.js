@@ -124,7 +124,7 @@ const playerController = {
         }
     },
 
-    async switchPlayerOwner ({ params, body, user }) {
+    async switchPlayerOwner ({ params, body, user }, res) {
         try {
             const findPlayer = await Player.findById(params._id)
             if (!findPlayer) {
@@ -148,7 +148,7 @@ const playerController = {
         }
     },
 
-    async generalUpdatePlayer ({ params, body, user }) {
+    async generalUpdatePlayer ({ params, body, user }, res) {
         try {
             const findPlayer = await Player.findById(params._id)
             if (!findPlayer) {
@@ -178,7 +178,7 @@ const playerController = {
         }
     },
 
-    async kickOutUser ({ params, body, user }) {
+    async kickOutUser ({ params, body, user }, res) {
         try {
 
             const findPlayer = await Player.findById(params._id)
@@ -206,7 +206,7 @@ const playerController = {
         }
     },
 
-    async leaveLeague ({ params, body, user }) {
+    async leaveLeague ({ params, body, user }, res) {
         try {
             const findPlayer = await Player.findById(params._id)
             const findLeague = await League.findById(body.leaveLeague)

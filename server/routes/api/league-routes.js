@@ -8,7 +8,9 @@ const {
     changeOpenLeague,
     joinLeague,
     switchLeagueOwner,
-    generalUpdateLeague
+    generalUpdateLeague,
+    getLeagueSettings,
+    getLeagueSettingsFields
 } = require('../../controllers/league-controller')
 
 const { authMiddleware } = require('../../utils/auth')
@@ -35,8 +37,16 @@ router
     .put(authMiddleware, generalUpdateLeague)
 
 router
-    .route('kickOutPlayer/:_id')
+    .route('/kickOutPlayer/:_id')
     .post(authMiddleware, kickOutPlayer)
+
+router
+    .route('/getSettings/:_id')
+    .post(authMiddleware, getLeagueSettings)
+
+router
+    .route('/getSettingsFields/:_id')
+    .post(authMiddleware, getLeagueSettingsFields)
 
 router
     .route('/:_id')

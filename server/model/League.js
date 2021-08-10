@@ -2,17 +2,6 @@ const mongoose = require('mongoose')
 
 const Schema = mongoose.Schema;
 
-const SettingsModelSchema = new Schema({
-    leagueSizeLimit: { type: Number, required: true },
-    ncaafbIncluded: { type: Boolean, required: true },
-    ncaafbWeekGameLimit: { type: Number, required: true },
-    planTier: { type: String, required: true },
-    weekStart: { type: Number, required: true },
-    weekEnd: { type: Number, required: true },
-    confidencePoints: { any: Object },
-    tiebreaker: { type: Boolean, required: true }
-})
-
 const PickModelSchema = new Schema({
     player_id: { type: Schema.Types.ObjectId, ref: "Player", required: true },
     picked: { type: Boolean, required: true },
@@ -42,14 +31,14 @@ const StandingsModelSchema = new Schema({
 
 const LeagueModelSchema = new Schema({
     league_id: { type: String, unique: true, required: true },
-    signup_key: { type: String, unique: true, required: true },
+    inviteToken: { type: String, unique: true },
     display_name: { type: String, required:  true },
     type: { type: String, required:  true },
     owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
     users: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
     players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
     open_league: { type: Boolean, required: true },
-    settings: { type: SettingsModelSchema, required: true },
+    settings: { type: Object, required: true },
     standings: [{ type: StandingsModelSchema, required: false }],
     schedule: [{ type: ScheduleModelSchema, required: false }]
 });
