@@ -1,6 +1,8 @@
 const { v4: uuidv4 } = require('uuid')
 
 const { League, Player, User } = require('../model')
+const SettingsModel = require('../model/LeagueSettings')
+
 
 const leagueController = {
     async getAllLeagues (req, res) {
@@ -26,9 +28,12 @@ const leagueController = {
     async createNewLeague ({ body, user }, res) {
         try {
             const Settings = require(`../data/leagues/settings/config`)[body.league.type]
-
-            const leagueSettings = Settings(body.league.settings)
+            const LeagueSettingsModel = SettingsModel[body.league.type]
             
+            const leagueSettings = Settings(body.league.settings)
+
+            const newSettings = await LeagueSettingsModel.create(leagueSettings.getSettings())
+
             const newLeague = await League.create({
                 league_id: body.league.league_id,
                 display_name: body.league.display_name,
@@ -37,9 +42,8 @@ const leagueController = {
                 users: [user._id],
                 players: [],
                 open_league: body.league.open_league || false,
-                settings: leagueSettings.getSettings(),
-                standings: [],
-                schedule: []
+                settings: newSettings._id,
+                standings: []
             })
 
             const newPlayer = await Player.create({
@@ -186,7 +190,7 @@ const leagueController = {
             // Check to see if the league is still collaborative
             // Check to see if the league has any vacancy
 
-            const findLeague = await League.findById({ inviteToken: params.inviteToken })
+            const findLeague = await League.findById({ inviteToken: params.inviteToken }).populate('settings')
 
             if (!findLeague) {
                 throw { error_message: 'This invite token is not tied to any league.' }
@@ -282,20 +286,30 @@ const leagueController = {
         }
     },
 
-    async getLeagueSettings ({ params, body, user }, res) {
+    async getLeagueSettings ({ params, user }, res) {
         const findLeague = await League.findById(params._id)
-
-        const Settings = require(`../data/leagues/settings/config`)[body.leagueType]
+            .select('settings users')
+            .populate('settings')
         
-        const leagueSettings = Settings(findLeague.settings)
+            // check if this user is a member of this league
+        if (!findLeague.users.includes(user._id)) {
+            throw { error_message: 'You are not a member of this league, therefore you cannot view the settings' }
+        }
 
-        res.json(leagueSettings.getSettings())
+        res.json(findLeague.settings)
     },
 
-    async getLeagueSettingsFields ({ params, body, user }, res) {
+    async getLeagueSettingsFields ({ params, user }, res) {
         const findLeague = await League.findById(params._id)
+            .select('settings type users')
+            .populate('settings')
 
-        const Settings = require(`../data/leagues/settings/config`)[body.leagueType]
+        // check if this user is a member of this league
+        if (!findLeague.users.includes(user._id)) {
+            throw { error_message: 'You are not a member of this league, therefore you cannot view the settings' }
+        }
+
+        const Settings = require(`../data/leagues/settings/config`)[findLeague.type]
 
         const leagueSettings = Settings(findLeague.settings)
 
