@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 
 const { api_urls } = require('./config')
 
-const { Team } = require('../../model')
+const { Team } = require('../../../model')
 
 const dropCollection = () => {
     return new Promise( async (res, rej) => {

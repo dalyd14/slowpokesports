@@ -3,7 +3,7 @@ const { getCurrentSearchDates, getSpecifiedSearchDates, transformToSlowpokeSched
 
 const { espn_api_dates_urls, espn_api_schedule_urls } = require('./config')
 
-const { Schedule, Team } = require('../../model');
+const { Schedule, Team } = require('../../../model');
 
 const dropCollection = () => {
     return new Promise( async (res, rej) => {
