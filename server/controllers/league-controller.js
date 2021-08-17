@@ -3,7 +3,6 @@ const { v4: uuidv4 } = require('uuid')
 const { League, Player, User } = require('../model')
 const SettingsModel = require('../model/LeagueSettings')
 
-
 const leagueController = {
     async getAllLeagues (req, res) {
         const foundLeagues = await League.find()
@@ -284,36 +283,6 @@ const leagueController = {
         } catch (e) {
             res.status(400).json({ message: "An error occurred while trying to update the league.", ...e })
         }
-    },
-
-    async getLeagueSettings ({ params, user }, res) {
-        const findLeague = await League.findById(params._id)
-            .select('settings users')
-            .populate('settings')
-        
-            // check if this user is a member of this league
-        if (!findLeague.users.includes(user._id)) {
-            throw { error_message: 'You are not a member of this league, therefore you cannot view the settings' }
-        }
-
-        res.json(findLeague.settings)
-    },
-
-    async getLeagueSettingsFields ({ params, user }, res) {
-        const findLeague = await League.findById(params._id)
-            .select('settings type users')
-            .populate('settings')
-
-        // check if this user is a member of this league
-        if (!findLeague.users.includes(user._id)) {
-            throw { error_message: 'You are not a member of this league, therefore you cannot view the settings' }
-        }
-
-        const Settings = require(`../data/leagues/settings/config`)[findLeague.type]
-
-        const leagueSettings = Settings(findLeague.settings)
-
-        res.json(leagueSettings.getFields())
     }
 }
 

@@ -93,6 +93,19 @@ const pool = (options) => {
                 weekEnd,
                 confidencePoints
             }
+        },
+        confirmTiers: function(gameConfig) {
+            const gameConfigTier = gameConfig[planTier.value]
+            if (gameConfigTier.player_size_limit !== leagueSizeLimit.value) {
+                return { ok: false, message: "The league size limit does not match" }
+            }
+            if (gameConfigTier.ncaafb !== ncaafbIncluded.value) {
+                return { ok: false, message: "The ncaafb included does not match" }
+            }
+            if (gameConfigTier.ncaafb_week_limit !== ncaafbWeekGameLimit.value) {
+                return { ok: false, message: "The ncaafb week game limit does not match" }
+            }
+            return { ok: true, message: "The settings  match the plane tier"}
         }
     }
 }
