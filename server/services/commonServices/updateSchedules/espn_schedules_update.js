@@ -5,7 +5,7 @@ const { getCurrentSearchDates, getSpecifiedSearchDates, transformToSlowpokeSched
 
 const { espn_api_dates_urls, espn_api_schedule_urls } = require('./config')
 
-const { Schedule, Team } = require('../../model');
+const { Schedule, Team } = require('../../../model');
 
 const callUpdateSchedule = async (type, years, league, weeks, weeksFilter, oddsOption) => {
 
@@ -39,26 +39,14 @@ const callUpdateSchedule = async (type, years, league, weeks, weeksFilter, oddsO
 
         readySchedule = dealWithOdds(readySchedule, savedOldGames, oddsOption)
 
-        const deletedGames = await Schedule.deleteMany({
-            espn_game_id: {
-                $in: readySchedule.map(game => game.espn_game_id)
-            }            
-        })
-
-        if (deletedGames.ok && deletedGames.n === deletedGames.deletedCount) {
-            console.log(`Successfully deleted ${deletedGames.deletedCount} ${league} record${deletedGames.deletedCount!==1 ? 's' : ''} from the Schedule table`)
-        } else {
-            console.log(`An error occured deleting the necessary ${league} records`)
-        }
-
-        return await Schedule.insertMany(readySchedule, async function(error, docs) {
-            if (error) {
-                await Schedule.insertMany(savedOldGames)
-                console.log(`An error occurred while trying to upload the ${docs.lenght} updated records for ${league}. The old records were re-uploaded.`)
-            } else {
-                console.log(`Successfully updated ${docs.length} record${docs.length!==1 ? 's' : ''}${weeksFilter ? ' for week' + (weeksFilter.length > 1 ? 's ' : ' ') + weeksFilter.join(', ') : ''} from the ${years[0]}-${years[1]} season in the ${league} league.`)
-            }
-        })
+        return Promise.all(
+            readySchedule.map( async game => {
+                return await Schedule.findOneAndUpdate(
+                    { espn_game_id: game.espn_game_id },
+                    { ...game }
+                )
+            })
+        )
     })
     .catch(e => {
         console.log(`Error loading the schedule from the ${years[0]}-${years[1]} season in the ${league} league.\n`, e)

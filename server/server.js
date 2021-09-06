@@ -15,9 +15,9 @@ if (process.env.NODE_ENV === 'production') {
 const routes = require('./routes');
 app.use(routes);
 
-const getFreshTeams = require('./services/addTeams/espn_teams')
-const getFreshSchedule = require('./services/updateSchedules/espn_schedules_fresh')
-const updateSchedule = require('./services/updateSchedules/espn_schedules_update')
+// const getFreshTeams = require('./services/addTeams/espn_teams')
+// const getFreshSchedule = require('./services/updateSchedules/espn_schedules_fresh')
+// const updateSchedule = require('./services/commonServices/updateSchedules/espn_schedules_update')
 
 db.once('open', () => {
   // getFreshTeams({
@@ -30,9 +30,7 @@ db.once('open', () => {
   //   seasonType: [2,3]
   // })
   // updateSchedule({
-  //   current: false,
-  //   season: 2020,
-  //   seasonType: [2,3]
+  //   current: true
   // })
   app.listen(PORT, () => console.log(`Now listening on ${PORT}`))
 })
