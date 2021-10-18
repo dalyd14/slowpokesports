@@ -1,7 +1,7 @@
 const moment = require('moment')
 
 const { pool } = require('../../model/LeagueSchedules')
-const { League, Schedule } = require('../../model')
+const { League, Schedule, Player } = require('../../model')
 
 const poolController = {
     async getAllSchedulesFromLeagues ({ params, body, user }, res) {
@@ -30,7 +30,7 @@ const poolController = {
 
     },
 
-    async ownerUpdateEvents ({ params, body, user }, res) {
+    async ownerUpdateSchedule ({ params, body, user }, res) {
         // Expected body.events
         // body.events = [
         //     {
@@ -118,8 +118,11 @@ const poolController = {
         }
     },
 
-    async playerUpdateEvents ({ params, body, user }, res) {
+    async playerUpdatePicks ({ params, body, user }, res) {
 
+        // Expected body.player
+        // body.player_id = player_id 
+        //
         // Expected body.events
         // body.events = [
         //     {
@@ -134,8 +137,89 @@ const poolController = {
 
         try {
             const foundLeague = await League.findById(params._id).populate('settings')
+            const foundPlayer = await Player.findById(body.player_id)
 
             if (!foundLeague.users.includes(user._id)) {
+                throw { error_message: 'This user is not a member of this league.' }
+            } else if (foundPlayer.league != params._id) {
+                throw { error_message: 'This player is not a member of this league.' }
+            } else if (foundPlayer.users.includes.user._id) {
+                throw { error_message: 'This user is not a member of this player.' }
+            }
+
+            let searchParams = {}
+            if (body.week && body.year) {
+                searchParams = {
+                    league: params._id,
+                    week: body.week,
+                    year: body.year,
+                    player_id: body.player_id
+                }
+            } else {
+                throw { error_message: 'A year and week was not included for this update request.' }
+            }
+
+            const targetSchedule = await pool.findOne(searchParams)
+                .select('_id finished closed closed_at events')
+                .populate('events')
+
+            if (targetSchedule.closed || targetSchedule.finished) {
+                throw { error_message: 'These picks cannot be submitted because the pool is closed.' }
+            }
+
+            const okPicks = checkPicks(body.events, targetSchedule.events, foundLeague.settings)
+
+            if (!okPicks.ok) {
+                throw { error_message: okPicks.error_message }
+            }
+            
+            const submitPicks = transformPicks(body.events, targetSchedule.events, body.player_id)
+
+            if (!submitPicks.ok) {
+                throw submitPicks.error_message
+            }
+
+            const updatedPicks = await pool.findOneAndUpdate(
+                searchParams,
+                {
+                    $set: { 
+                        events: submitPicks.results
+                    }
+                },
+                {
+                    "new": true
+                }
+            )
+
+            res.json(updatedPicks)
+        } catch (e) {
+            res.status(400).json({ message: "An error occurred while updating the schedules for the league.", ...e })
+        }
+    },
+
+    async ownerUpdatePicks ({ params, body, user }, res) {
+
+        // body.playerId = player id for editting schedules
+        // Expected body.events
+        // body.events = [
+        //     {  
+        //         event: event ID,
+        //         picked: whether or not this event was picked by this user,
+        //         picked_home: whether the user picked the home team,
+        //         confidence_points: { confidencePointsPresent: true, value: 2 }
+        //              how many confidence points did this event receive,
+        //         tiebreaker: (optional) the tiebreaker that this user chose
+        //     }
+        // ]
+
+        try {
+            const foundLeague = await League.findById(params._id).populate('settings')
+
+            if (!foundLeague.users.includes(user._id)) {
+                throw { error_message: 'This user is not a member of this league.' }
+            } else if (foundLeague.owner != user._id) {
+                throw { error_message: 'This user is not the owner of this league.' }
+            } else if (!foundLeague.users.includes(body.playerId)) {
                 throw { error_message: 'This user is not a member of this league.' }
             }
 
@@ -150,71 +234,94 @@ const poolController = {
                 throw { error_message: 'A year and week was not included for this update request.' }
             }
 
-            const targetSchedule = await pool.findOne(searchParams)
-                .select('_id finished closed closed_at events')
-                .populate({
-                    path: 'events',
-                    populate: {
-                        path: 'event'
-                    }
-                })
+            const okUpdate = await updatePicks(searchParams, body.events, body.playerId, foundLeague)
 
-            if (targetSchedule.closed || targetSchedule.finished) {
-                throw { error_message: 'These picks cannot be submitted because the pool is closed.' }
+            if (!okUpdate.ok) {
+                throw okupdate.error_message
             }
 
-            const okPicks = checkPicks(body.events, targetSchedule.events, foundLeague.settings)
+            res.json(okUpdate.results)
 
-            if (!okPicks.ok) {
-                throw { error_message: okPicks.error_message }
-            }
-            
-            const submitPicks = transformPicks(body.events, targetSchedule.events, user)
-
-            if (!submitPicks.ok) {
-                throw submitPicks.error_message
-            }
-
-            Promise.all(submitPicks.results.map( async pick => {
-                const { event, confidencePoints, ...updateObj } = pick
-                await pool.findOneAndUpdate(
-                    searchParams,
-                    {
-                        $pull: {
-                            "events.$[a].picks": {
-                                player_id: updateObj.player_id 
-                            }
-                        }
-                    },
-                    {
-                        "arrayFilters": [
-                            { "a._id": event }
-                        ]
-                    }
-                )
-                return await pool.findOneAndUpdate(
-                    searchParams,
-                    {
-                        $push: { 
-                            "events.$[a].picks": {
-                                confidence_points: confidencePoints,
-                                ...updateObj
-                            }
-                        }
-                    },
-                    { 
-                        "arrayFilters": [
-                            { "a._id": event }
-                        ],
-                        "new": true 
-                    }
-                )
-            }))
-            .then(updatedSchedule => res.json(updatedSchedule[updatedSchedule.length - 1]))
-            .catch(e => res.status(400).json({ message: "An error occurred while updating the schedules for the league.", ...e }))
         } catch (e) {
-            res.status(400).json({ message: "An error occurred while updating the schedules for the league.", ...e })
+            res.status(400).json({ message: "An error occurred while updating the picks for the league.", ...e })
         }
+    }
+}
+
+const updatePicks = async (searchParams, events, playerId, league) => {
+    let okObj = {
+        ok: false
+    }
+
+    try {
+        const targetSchedule = await pool.findOne(searchParams)
+        .select('_id finished closed closed_at events')
+        .populate({
+            path: 'events',
+            populate: {
+                path: 'event'
+            }
+        })
+
+        if (targetSchedule.closed || targetSchedule.finished) {
+            throw { error_message: 'These picks cannot be submitted because the pool is closed.' }
+        }
+
+        const okPicks = checkPicks(events, targetSchedule.events, league.settings)
+
+        if (!okPicks.ok) {
+            throw { error_message: okPicks.error_message }
+        }
+
+        const submitPicks = transformPicks(events, targetSchedule.events, playerId)
+
+        if (!submitPicks.ok) {
+            throw submitPicks.error_message
+        }
+
+        Promise.all(submitPicks.results.map( async pick => {
+            const { event, confidencePoints, ...updateObj } = pick
+            await pool.findOneAndUpdate(
+                searchParams,
+                {
+                    $pull: {
+                        "events.$[a].picks": {
+                            player_id: updateObj.player_id
+                        }
+                    }
+                },
+                {
+                    "arrayFilters": [
+                        { "a._id": event }
+                    ]
+                }
+            )
+            return await pool.findOneAndUpdate(
+                searchParams,
+                {
+                    $push: {
+                        "events.$[a].picks": {
+                            confidence_points: confidencePoints,
+                            ...updateObj
+                        }
+                    }
+                },
+                {
+                    "arrayFilters": [
+                        { "a._id": event }
+                    ],
+                    "new": true 
+                }
+            )
+        }))
+        .then(updatedSchedule => res.json(updatedSchedule[updatedSchedule.length - 1]))
+        .catch(e => res.status(400).json({ message: "An error occurred while updating the picks for the league.", ...e }))
+    } catch (e) {
+        okObj = {
+            ok: false,
+            ...e
+        }
+        return okObj
     }
 }
 
@@ -353,7 +460,7 @@ const checkPicks = (submittedEvents, scheduledEvents, settings) => {
     return okObj
 }
 
-const transformPicks = (submittedEvents, scheduledEvents, user) => {
+const transformPicks = (submittedEvents, scheduledEvents, playerId) => {
     // submitted format
     //   event: espn event ID,
     //   picked: whether or not this event was picked by this user,
@@ -388,7 +495,7 @@ const transformPicks = (submittedEvents, scheduledEvents, user) => {
                 }
                 const pushedEvent = {
                     event: e._id,
-                    player_id: user._id,
+                    player_id: playerId,
                     picked: true,
                     picked_home: submitEvent.picked_home,
                     correct: false,

@@ -1,8 +1,9 @@
 const router = require('express').Router();
 const {
     getAllSchedulesFromLeagues,
-    ownerUpdateEvents,
-    playerUpdateEvents
+    ownerUpdateSchedule,
+    ownerUpdatePicks,
+    playerUpdatePicks
 } = require('../../../controllers/gameControllers/pool-controller')
 
 const { authMiddleware } = require('../../../utils/auth')
@@ -12,11 +13,15 @@ router
     .post(authMiddleware, getAllSchedulesFromLeagues)
 
 router
-    .route('/ownerUpdate/:_id')
-    .put(authMiddleware, ownerUpdateEvents)
+    .route('/ownerUpdateSchedule/:_id')
+    .put(authMiddleware, ownerUpdateSchedule)
+
+router
+    .route('/ownerUpdateEvent/:_id')
+    .put(authMiddleware, ownerUpdatePicks)
 
 router
     .route('/playerUpdate/:_id')
-    .put(authMiddleware, playerUpdateEvents)
+    .put(authMiddleware, playerUpdatePicks)
 
 module.exports = router

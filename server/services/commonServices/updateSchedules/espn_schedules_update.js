@@ -88,26 +88,32 @@ const dealWithOdds = (newSchedule, oldSchedule, oddsOption) => {
 
 const setOldOddsSet = (newSchedule, oldSchedule) => {
     return newSchedule.map(game => {
-        game.odds_set = oldSchedule.find(oldGame => oldGame.espn_game_id === game.espn_game_id).odds_set
+        const foundGame = oldSchedule.find(oldGame => oldGame.espn_game_id === game.espn_game_id)
+        game.odds_set = foundGame.odds_set        
         return game
     })
 }
 
 const setOddsSet = (newSchedule) => {
     return newSchedule.map(game => {
-        const gametime = moment(game.start_time)
-        if (gametime.isSameOrBefore(moment())) {
-            game.odds_set = true
-        } else if (
-            moment().day() === 2 &&
-            gametime.isSameOrAfter(moment()) &&
-            gametime.isSameOrBefore(moment().add(7, 'days'))
-        ) {
-            game.odds_set = true
-        } else {
-            game.odds_set = false
+        try {
+            const gametime = moment(game.start_time)
+            if (gametime.isSameOrBefore(moment())) {
+                game.odds_set = true
+            } else if (
+                moment().day() === 2 &&
+                gametime.isSameOrAfter(moment()) &&
+                gametime.isSameOrBefore(moment().add(7, 'days'))
+            ) {
+                game.odds_set = true
+            } else {
+                game.odds_set = false
+            }
+            return game            
+        } catch (e) {
+            console.log(e, game)
+            throw e
         }
-        return game
     })
 }
 

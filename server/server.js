@@ -16,21 +16,19 @@ const routes = require('./routes');
 app.use(routes);
 
 // const getFreshTeams = require('./services/addTeams/espn_teams')
-// const getFreshSchedule = require('./services/updateSchedules/espn_schedules_fresh')
-// const updateSchedule = require('./services/commonServices/updateSchedules/espn_schedules_update')
+// const getFreshSchedule = require('./services/commonServices/updateSchedules/espn_schedules_fresh')
+const updateSchedule = require('./services/commonServices/updateSchedules/espn_schedules_update')
 
 db.once('open', () => {
   // getFreshTeams({
   //   dropTable: true
   // })
   // getFreshSchedule({
-  //   dropTable: false,
-  //   current: false,
-  //   season: 2020,
-  //   seasonType: [2,3]
-  // })
-  // updateSchedule({
+  //   dropTable: true,
   //   current: true
   // })
+  updateSchedule({
+    current: true
+  })
   app.listen(PORT, () => console.log(`Now listening on ${PORT}`))
 })

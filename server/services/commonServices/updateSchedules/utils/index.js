@@ -119,12 +119,14 @@ const transformToSlowpokeSchedule = (espnEvent, teams, league, weeks) => {
     if (espnEvent.competitions[0].odds) {
         const defaultOdds = espnEvent.competitions[0].odds.find(odd => odd.provider.priority === 1)
         const oddText = defaultOdds.details.split(" ")
-        const line = parseFloat(oddText[1])
+        let line = parseFloat(oddText[1])
 
         let favorite = espnEvent.competitions[0].competitors.find(comp => comp.team.abbreviation === oddText[0])
 
         favorite = favorite ? favorite.homeAway : false
-
+        if (isNaN(line)) {
+            line = null
+        }
         odds = {
             line,
             favorite
