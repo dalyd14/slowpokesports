@@ -37,16 +37,17 @@ const callUpdateSchedule = async (type, years, league, weeks, weeksFilter, oddsO
             }            
         })
 
-        readySchedule = dealWithOdds(readySchedule, savedOldGames, oddsOption)
+        console.log(readySchedule.filter(e => e.week == "1")[0])
+        // readySchedule = dealWithOdds(readySchedule, savedOldGames, oddsOption)
 
-        return Promise.all(
-            readySchedule.map( async game => {
-                return await Schedule.findOneAndUpdate(
-                    { espn_game_id: game.espn_game_id },
-                    { ...game }
-                )
-            })
-        )
+        // return Promise.all(
+        //     readySchedule.map( async game => {
+        //         return await Schedule.findOneAndUpdate(
+        //             { espn_game_id: game.espn_game_id },
+        //             { ...game }
+        //         )
+        //     })
+        // )
     })
     .catch(e => {
         console.log(`Error loading the schedule from the ${years[0]}-${years[1]} season in the ${league} league.\n`, e)
