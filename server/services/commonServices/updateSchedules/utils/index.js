@@ -106,7 +106,7 @@ const getWeekNumber = (gameDate, seasonWeeks) => {
     return selectedWeek.week
 }
 
-const transformToSlowpokeSchedule = (espnEvent, teams, league, weeks) => {
+const transformToSlowpokeSchedule = (espnEvent, teams, league, weeks, updateOrNew) => {
     
     const home = espnEvent.competitions[0].competitors.find(comp => comp.homeAway === 'home')
     const away = espnEvent.competitions[0].competitors.find(comp => comp.homeAway === 'away')
@@ -131,7 +131,7 @@ const transformToSlowpokeSchedule = (espnEvent, teams, league, weeks) => {
             line,
             favorite
         }
-    } else {
+    } else if (updateOrNew !== "update") {
         odds = {
             line: 0,
             favorite: 'not set'
@@ -152,11 +152,13 @@ const transformToSlowpokeSchedule = (espnEvent, teams, league, weeks) => {
         week: weekNum,
         seasonType: espnEvent.season.type,
         completed: espnEvent.status.type.completed,
-        odds: odds,
-        odds_set: false,
         home_score: Number(home.score) || 0,
         away_score: Number(away.score) || 0,
         display_name: espnEvent.shortName
+    }
+
+    if (odds) {
+        slowpokeEvent.odds = odds
     }
     
     return slowpokeEvent

@@ -25,96 +25,23 @@ const callUpdateSchedule = async (type, years, league, weeks, weeksFilter, oddsO
 
         const returnSchedule = games.flat(Infinity)
 
-        let readySchedule = returnSchedule.map(event => transformToSlowpokeSchedule(event, teams, league, weeks))
+        let readySchedule = returnSchedule.map(event => transformToSlowpokeSchedule(event, teams, league, weeks, "update"))
 
         if (weeksFilter) {
             readySchedule = readySchedule.filter(game => weeksFilter.includes(game.week))
         }
 
-        const savedOldGames = await Schedule.find({
-            espn_game_id: {
-                $in: readySchedule.map(game => game.espn_game_id)
-            }            
-        })
-
-        console.log(readySchedule.filter(e => e.week == "1")[0])
-        // readySchedule = dealWithOdds(readySchedule, savedOldGames, oddsOption)
-
-        // return Promise.all(
-        //     readySchedule.map( async game => {
-        //         return await Schedule.findOneAndUpdate(
-        //             { espn_game_id: game.espn_game_id },
-        //             { ...game }
-        //         )
-        //     })
-        // )
+        return Promise.all(
+            readySchedule.map( async game => {
+                return await Schedule.findOneAndUpdate(
+                    { espn_game_id: game.espn_game_id },
+                    { ...game }
+                )
+            })
+        )
     })
     .catch(e => {
         console.log(`Error loading the schedule from the ${years[0]}-${years[1]} season in the ${league} league.\n`, e)
-    })
-}
-
-const dealWithOdds = (newSchedule, oldSchedule, oddsOption) => {
-    let returnedSchedule
-    
-    newSchedule = setOldOddsSet(newSchedule, oldSchedule)
-    
-    switch (oddsOption) {
-        case 0:
-            returnedSchedule = newSchedule.map(newGame => {
-                newGame.odds = oldSchedule.find(oldGame => oldGame.espn_game_id === newGame.espn_game_id).odds
-                return newGame
-            })
-            break;
-        case 1:
-            returnedSchedule = newSchedule.map(newGame => {
-                if (!newGame.odds_set) {
-                    newGame.odds = oldSchedule.find(oldGame => oldGame.espn_game_id === newGame.espn_game_id).odds
-                    return newGame                    
-                }
-            })
-            break;
-        case 2:
-            returnedSchedule = newSchedule
-            break;
-        default:
-            console.log("Error! Incorrect odds options.")
-            return
-    }
-
-    returnedSchedule = setOddsSet(returnedSchedule)
-
-    return returnedSchedule
-}
-
-const setOldOddsSet = (newSchedule, oldSchedule) => {
-    return newSchedule.map(game => {
-        const foundGame = oldSchedule.find(oldGame => oldGame.espn_game_id === game.espn_game_id)
-        game.odds_set = foundGame.odds_set        
-        return game
-    })
-}
-
-const setOddsSet = (newSchedule) => {
-    return newSchedule.map(game => {
-        try {
-            const gametime = moment(game.start_time)
-            if (gametime.isSameOrBefore(moment())) {
-                game.odds_set = true
-            } else if (
-                moment().day() === 2 &&
-                gametime.isSameOrAfter(moment()) &&
-                gametime.isSameOrBefore(moment().add(7, 'days'))
-            ) {
-                game.odds_set = true
-            } else {
-                game.odds_set = false
-            }
-            return game            
-        } catch (e) {
-            console.log(e, game)
-            throw e
-        }
     })
 }
 
